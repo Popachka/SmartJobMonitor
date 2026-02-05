@@ -8,6 +8,9 @@ class RawVacancy(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     source: Mapped[str] = mapped_column(String(255))
+    chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    message_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    
     raw_text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 

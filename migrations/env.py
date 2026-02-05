@@ -14,7 +14,6 @@ import src.models.vacancy
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -51,7 +50,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
-
+    print(f"DEBUG: Alembic is connecting to: {url}")
     with context.begin_transaction():
         context.run_migrations()
 
@@ -68,8 +67,11 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
+    
     section = config.get_section(config.config_ini_section, {})
-    section["sqlalchemy.url"] = app_config.ASYNC_SQLALCHEMY_DATABASE_URI
+    url = app_config.ASYNC_SQLALCHEMY_DATABASE_URI
+    print(f"\n[DEBUG] Connecting to URL: {url}\n")
+    section["sqlalchemy.url"] = url
 
     connectable = async_engine_from_config(
         section, 
