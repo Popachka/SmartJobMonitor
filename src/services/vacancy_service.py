@@ -1,8 +1,8 @@
 # Работа с вакансиями (DB + Logic)
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.vacancy import RawVacancy
+from src.models.vacancy import RawVacancy, Vacancy
 from src.core.logger import get_app_logger
-
+from src.schemas.vacancy import VacancyParsedSchema
 logger = get_app_logger(__name__)
 
 class VacancyService:
@@ -23,4 +23,19 @@ class VacancyService:
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Ошибка сохранения вакансии в Service: {e}")
+            raise
+    async def save_parsed_vacancy(self, raw_id: int, vacancy: VacancyParsedSchema):
+        try:
+            new_vacancy = Vacancy(
+                raw_id = raw_id,
+                title = vacancy.title,
+                tech_stack = vacancy.tech_stack
+            )
+            self.session.add(new_vacancy)
+            await self.session.commit()
+            await self.session.refresh(new_vacancy)
+            return new_vacancy
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Ошибка при сохранении обработанной вакансии: {e}")
             raise

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     API_ID: int
     API_HASH: str
+    BOT_TOKEN: str
     CHANNELS: list[str] = ['@Simaca']
 
     POSTGRES_SERVER: str

@@ -2,6 +2,7 @@ from sqlalchemy import String, Text, ForeignKey, BigInteger, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from src.models.base import Base
+from sqlalchemy.dialects.postgresql import JSONB
 
 class RawVacancy(Base):
     __tablename__ = "raw_vacancies"
@@ -26,7 +27,6 @@ class Vacancy(Base):
     
     title: Mapped[str] = mapped_column(String(255))
     
-    from sqlalchemy.dialects.postgresql import JSONB
     tech_stack: Mapped[list] = mapped_column(JSONB)
 
     raw_parent: Mapped["RawVacancy"] = relationship(back_populates="parsed_vacancy")

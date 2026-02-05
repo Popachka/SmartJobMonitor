@@ -3,7 +3,7 @@ from src.core.config import config
 from src.core.logger import get_app_logger
 from telethon.tl.types import Message
 from src.services.vacancy_service import VacancyService
-
+from src.workers.tasks import parse_vacancy_task
 logger = get_app_logger(__name__)
 
 class TelegramScraper:
@@ -22,8 +22,8 @@ class TelegramScraper:
                 )
                 logger.info(f"Вакансия {raw_vancancy.id} успешно сохранена через Service")
                 
-                # Здесь позже будет вызов задачи в Redis (Taskiq)
-                # await parse_vacancy_task.kiq(raw_vancancy.id)
+                await parse_vacancy_task.kiq(raw_vancancy.id)
+                logger.debug(f"Задача на парсинг вакансии {raw_vancancy.id} отправлена в очередь")
                 
             except Exception as e:
                 logger.error(f"Ошибка в обработчике скрапера: {e}")
