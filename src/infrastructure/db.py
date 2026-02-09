@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from src.core.config import config
+from src.infrastructure.config import config
 
 engine = create_async_engine(config.ASYNC_SQLALCHEMY_DATABASE_URI, echo = True, future = True)
 
@@ -13,6 +13,7 @@ async def get_session():
 async def init_db():
     from src.models.base import Base
     import src.models.vacancy
+    import src.models.user
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

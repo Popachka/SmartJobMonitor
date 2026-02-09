@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher
-from src.core.config import config
+from src.infrastructure.config import config
 from src.bot.handlers import router
-from src.core.logger import get_app_logger
+from src.infrastructure.logger import get_app_logger
 
 logger = get_app_logger(__name__)
 async def start_bot():

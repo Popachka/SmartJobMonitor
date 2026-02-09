@@ -1,5 +1,4 @@
 import logging
-from logging import Logger
 
 def setup_root_logger():
     root_name = "job_monitor"

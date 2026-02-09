@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
 
+
+    GOOGLE_API_KEY: str
+    GOOGLE_MODEL: str = 'gemini-2.5-flash'
     @computed_field
     @property
     def ASYNC_SQLALCHEMY_DATABASE_URI(self) -> str:

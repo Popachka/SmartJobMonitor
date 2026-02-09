@@ -1,8 +1,7 @@
-from telethon import TelegramClient, events
-from src.core.config import config
-from src.core.logger import get_app_logger
-from telethon.tl.types import Message
-from src.services.vacancy_service import VacancyService
+﻿from telethon import TelegramClient, events
+from src.infrastructure.config import config
+from src.infrastructure.logger import get_app_logger
+from src.repositories.vacancy_repository import VacancyRepository
 from src.workers.tasks import parse_vacancy_task
 logger = get_app_logger(__name__)
 
@@ -13,18 +12,18 @@ class TelegramScraper:
     async def _message_handler(self, event: events.NewMessage.Event):
         logger.debug(f"Event: {event}")
         async with self.session_factory() as session:
-            service = VacancyService(session)
+            repo = VacancyRepository(session)
             try:
-                raw_vancancy = await service.create_raw_vacancy(
+                raw_vancancy = await repo.create_raw_vacancy(
                     text=event.message.text,
                     chat_id=event.chat_id,
                     message_id=event.message.id
                 )
-                logger.info(f"Вакансия {raw_vancancy.id} успешно сохранена через Service")
-                
+                logger.info(f"Вакансия {raw_vancancy.id} успешно сохранена через Repository")
+
                 await parse_vacancy_task.kiq(raw_vancancy.id)
                 logger.debug(f"Задача на парсинг вакансии {raw_vancancy.id} отправлена в очередь")
-                
+
             except Exception as e:
                 logger.error(f"Ошибка в обработчике скрапера: {e}")
     async def start(self):

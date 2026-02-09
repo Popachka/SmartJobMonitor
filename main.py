@@ -1,7 +1,7 @@
 import asyncio
-from src.core.logger import get_app_logger
+from src.infrastructure.logger import get_app_logger
 from src.scrapper import TelegramScraper
-from src.core.db import async_session 
+from src.infrastructure.db import async_session 
 from src.bot.main import start_bot
 logger = get_app_logger(__name__)
 
