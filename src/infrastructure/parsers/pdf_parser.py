@@ -34,7 +34,7 @@ class PDFParser(BaseResumeParser):
 
         return parsed_data
 
-    def _pdf_to_images(self, source: io.BytesIO, dpi: int = 200) -> list[Image.Image]:
+    def _pdf_to_images(self, source: io.BytesIO, dpi: int = 150) -> list[Image.Image]:
         """Логика скриншотов страниц PDF."""
         source.seek(0)
         images: list[Image.Image] = []
@@ -77,27 +77,29 @@ class PDFParser(BaseResumeParser):
         start_images = time.perf_counter()
 
         for idx, img in enumerate(images, start=1):
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
             img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format="PNG")
+            img.save(img_byte_arr, format="JPEG", quality=85, optimize=True)
             img_bytes = img_byte_arr.getvalue()
 
             prompt_parts.append(
                 BinaryContent(
                     data=img_bytes,
-                    media_type="image/png",
+                    media_type="image/jpeg",
                 )
             )
 
             logger.debug(
-                "Prepared image %d: size=%.2f KB",
+                "Prepared image %d: size=%.2f KB (JPEG)",
                 idx,
                 len(img_bytes) / 1024,
             )
-
+            img_byte_arr.close()  
         images_time = time.perf_counter() - start_images
         logger.info("Images prepared in %.3f s", images_time)
 
-        # --- Вызов агента ---
         start_agent = time.perf_counter()
 
         result = await self._agent.run(user_prompt=prompt_parts)
@@ -107,6 +109,4 @@ class PDFParser(BaseResumeParser):
 
         total_time = time.perf_counter() - start_total
         logger.info("Total _run_agent time: %.3f s", total_time)
-        logger.info("RESULT: %s", result.output)
-
         return result.output

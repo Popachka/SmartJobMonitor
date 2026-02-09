@@ -2,8 +2,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.user import User
 from src.infrastructure.logger import get_app_logger
+from src.agents.resume import OutResumeParse
 
 logger = get_app_logger(__name__)
+
 
 class UserRepository:
     def __init__(self, session: AsyncSession):
@@ -26,14 +28,17 @@ class UserRepository:
 
         return user
 
-    async def update_resume(self, tg_id: int, text: str):
+    async def update_user_resume(self, tg_id: int, data: "OutResumeParse"):
+        if not data.is_resume:
+            logger.warning(f"Попытка обновить резюме для {tg_id}, но в данных is_resume=False. Пропускаем.")
+            return None
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
         user = result.scalar_one_or_none()
 
         if user:
-            user.text_resume = text
-            # user.tech_stack = parsed_data.tech_stack
-            # user.primary_language = parsed_data.primary_language
+            user.text_resume = data.full_relevant_text_from_resume
+            user.tech_stack = data.tech_stack
+            user.primary_language = data.main_programming_language
             await self.session.commit()
         return user
