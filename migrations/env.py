@@ -11,6 +11,7 @@ from src.infrastructure.config import config as app_config
 from src.models.base import Base
 import src.models.vacancy
 import src.models.user
+import src.models.match
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

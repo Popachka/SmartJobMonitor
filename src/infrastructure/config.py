@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     API_ID: int
     API_HASH: str
     BOT_TOKEN: str
-    CHANNELS: list[str] = ['@Simaca']
+    CHANNELS: list[str] = ['@Simaca', 't.me/myresume_ru', 't.me/ru_pythonjobs']
+    MIRROR_CHANNEL: int
 
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432

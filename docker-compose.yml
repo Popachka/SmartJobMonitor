@@ -25,10 +25,5 @@ services:
       - "5050:80"
     depends_on:
       - db
-  redis:
-    image: redis:7-alpine
-    container_name: job_monitor_redis
-    ports:
-      - "6379:6379"
 volumes:
   postgres_data:

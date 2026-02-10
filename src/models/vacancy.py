@@ -1,32 +1,16 @@
-from sqlalchemy import String, Text, ForeignKey, BigInteger, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
-from src.models.base import Base
+from sqlalchemy import BigInteger, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
-class RawVacancy(Base):
-    __tablename__ = "raw_vacancies"
+from src.models.base import Base
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    chat_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
-    message_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
-    
-    raw_text: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-    # Статус обработки: 0 - новый, 1 - обработан, 2 - ошибка
-    status: Mapped[int] = mapped_column(default=0)
-
-    parsed_vacancy: Mapped["Vacancy"] = relationship(back_populates="raw_parent", uselist=False)
 
 class Vacancy(Base):
     __tablename__ = "vacancies"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    raw_id: Mapped[int] = mapped_column(ForeignKey("raw_vacancies.id"))
-    
-    title: Mapped[str] = mapped_column(String(255))
-    
-    tech_stack: Mapped[list] = mapped_column(JSONB)
-
-    raw_parent: Mapped["RawVacancy"] = relationship(back_populates="parsed_vacancy")
+    text: Mapped[str] = mapped_column(Text)
+    main_programming_language: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    tech_stack: Mapped[list[str]] = mapped_column(JSONB)
+    mirror_chat_id: Mapped[int] = mapped_column(BigInteger)
+    mirror_message_id: Mapped[int] = mapped_column(BigInteger)

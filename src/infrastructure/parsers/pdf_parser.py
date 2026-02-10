@@ -27,7 +27,12 @@ class PDFParser(BaseResumeParser):
             raise TooManyPagesError(
                 "Резюме слишком длинное (более 10 страниц)")
 
-        parsed_data = await self._run_agent(images)
+        try:
+            parsed_data = await self._run_agent(images)
+        finally:
+            for img in images:
+                img.close()
+            images.clear()
 
         if not parsed_data.is_resume:
             raise NotAResumeError("Этот документ не похож на резюме")
@@ -73,7 +78,6 @@ class PDFParser(BaseResumeParser):
             "Please extract all text and analyze the following resume screenshots:"
         ]
 
-        # --- Подготовка изображений ---
         start_images = time.perf_counter()
 
         for idx, img in enumerate(images, start=1):

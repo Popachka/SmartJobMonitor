@@ -9,3 +9,9 @@ class NotAResumeError(ParserError):
 class TooManyPagesError(ParserError):
     """В файле слишком много страниц для текущей модели"""
     pass
+
+class UserNotFoundError(Exception):
+    pass
+
+class VacancyNotFoundError(Exception):
+    pass

@@ -11,6 +11,9 @@ class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_by_id(self, user_id: int) -> User | None:
+        return await self.session.get(User, user_id)
+
     async def get_or_create_user(self, tg_id: int, username: str | None = None) -> User:
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
@@ -39,6 +42,16 @@ class UserRepository:
         if user:
             user.text_resume = data.full_relevant_text_from_resume
             user.tech_stack = data.tech_stack
-            user.primary_language = data.main_programming_language
+            user.main_programming_language = data.main_programming_language
             await self.session.commit()
         return user
+
+    async def get_users_by_main_programming_language(self, lang: str) -> list[User]:
+        if not lang:
+            return []
+        query = select(User).where(
+            User.main_programming_language == lang,
+            User.text_resume.is_not(None),
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())

@@ -1,11 +1,9 @@
 from aiogram import Bot, Dispatcher
-from src.infrastructure.config import config
 from src.bot.handlers import router
 from src.infrastructure.logger import get_app_logger
 
 logger = get_app_logger(__name__)
-async def start_bot():
-    bot = Bot(token=config.BOT_TOKEN) 
+async def start_bot(bot: Bot):
     dp = Dispatcher()
     dp.include_router(router)
     
