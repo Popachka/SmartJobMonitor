@@ -7,7 +7,7 @@ from functools import lru_cache
 
 
 class OutResumeParse(BaseModel):
-    """Схема структурированных данных резюме."""
+                                                
     is_resume: bool = Field(
         ...,
         description="Признак того, является ли предоставленный документ резюме или профессиональным профилем кандидата."
@@ -38,7 +38,7 @@ class OutResumeParse(BaseModel):
 
 @lru_cache(maxsize=1)
 def get_resume_parse_agent() -> Agent:
-    """Инициализирует агента для парсинга резюме."""
+                                                    
     system_prompt = (
         "Ты — эксперт по анализу технических резюме. Твоя задача: перевести неструктурированный текст в признаки.\n\n"
         "ПРАВИЛА ИЗВЛЕЧЕНИЯ:\n"

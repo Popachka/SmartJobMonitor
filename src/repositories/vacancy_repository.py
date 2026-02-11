@@ -13,7 +13,7 @@ class VacancyRepository:
     async def get_by_id(self, vacancy_id: int) -> Vacancy | None:
         return await self.session.get(Vacancy, vacancy_id)
 
-    async def create_vacancy(self, dto: VacancyCreateDTO) -> Vacancy:
+    async def create(self, dto: VacancyCreateDTO) -> Vacancy:
         try:
             vacancy = Vacancy(**dto.model_dump())
 

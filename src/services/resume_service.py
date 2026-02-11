@@ -27,4 +27,4 @@ class ResumeService:
         )
 
         logger.info(f"Обновление профиля пользователя {tg_id}")
-        await self.user_repo.update_user_resume(tg_id=tg_id, dto=user_dto)
+        await self.user_repo.update_resume_by_tg_id(tg_id=tg_id, dto=user_dto)

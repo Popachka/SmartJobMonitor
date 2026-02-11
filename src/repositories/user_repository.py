@@ -21,7 +21,7 @@ class UserRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_or_create_user(self, tg_id: int, username: str | None = None) -> User:
+    async def get_or_create_by_tg_id(self, tg_id: int, username: str | None = None) -> User:
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
         user = result.scalar_one_or_none()
@@ -38,7 +38,7 @@ class UserRepository:
 
         return user
 
-    async def update_user_resume(self, tg_id: int, dto: UserResumeUpdateDTO) -> User | None:
+    async def update_resume_by_tg_id(self, tg_id: int, dto: UserResumeUpdateDTO) -> User | None:
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
         user = result.scalar_one_or_none()

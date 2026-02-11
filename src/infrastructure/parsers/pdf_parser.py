@@ -16,7 +16,7 @@ class PDFParser(BaseResumeParser):
         self._agent = get_resume_parse_agent()
 
     async def extract_text(self, source: ParserInput) -> OutResumeParse:
-        """Основной флоу: PDF -> Images -> Structured Data -> Text."""
+                                                                      
         if not isinstance(source, io.BytesIO):
             raise ParserError(
                 f"PDFParser ожидает BytesIO, получен {type(source)}")
@@ -41,7 +41,7 @@ class PDFParser(BaseResumeParser):
         return parsed_data
 
     def _pdf_to_images(self, source: io.BytesIO, dpi: int = 150) -> list[Image.Image]:
-        """Логика скриншотов страниц PDF."""
+                                            
         source.seek(0)
         images: list[Image.Image] = []
 
@@ -59,7 +59,7 @@ class PDFParser(BaseResumeParser):
         return images
 
     def _render_page(self, page: fitz.Page, dpi: int) -> Image.Image | None:
-        """Рендеринг конкретной страницы в PIL.Image."""
+                                                        
         try:
             pix = page.get_pixmap(dpi=dpi)
             img_bytes = pix.tobytes("png")

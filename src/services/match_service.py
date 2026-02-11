@@ -16,7 +16,7 @@ class MatchService:
         self.notifier = notifier
         self._agent = get_match_agent()
 
-    async def process_vacancy(self, vacancy_id: int) -> None:
+    async def process_vacancy_matches(self, vacancy_id: int) -> None:
         async with self.session_factory() as session:
             v_repo = VacancyRepository(session)
             u_repo = UserRepository(session)
@@ -37,18 +37,18 @@ class MatchService:
         for user_data in candidates:
             try:
                 logger.info(f'Send vacancy to {user_data.tg_id}')
-                await self._process_single_match(vacancy_data, user_data)
+                await self._process_candidate_match(vacancy_data, user_data)
             except Exception as e:
                 logger.error(f"Ошибка матчинга для юзера {user_data.id}: {e}")
 
-    async def _process_single_match(self, vacancy: VacancyData, user: UserData) -> None:
+    async def _process_candidate_match(self, vacancy: VacancyData, user: UserData) -> None:
 
         resume_text = user.text_resume
-        score_result = await self._score_match(vacancy_text=vacancy.text, resume_text=resume_text)
+        score_result = await self._score_vacancy_resume(vacancy_text=vacancy.text, resume_text=resume_text)
 
         async with self.session_factory() as session:
             match_repo = MatchRepository(session)
-            await match_repo.create_match(
+            await match_repo.create(
                 vacancy_id=vacancy.id,
                 user_id=user.id,
                 score=score_result.score,
@@ -62,7 +62,7 @@ class MatchService:
         )
 
     @trace_performance("Score_match")
-    async def _score_match(self, vacancy_text: str, resume_text: str) -> OutMatchParse:
+    async def _score_vacancy_resume(self, vacancy_text: str, resume_text: str) -> OutMatchParse:
         prompt = (
             "Vacancy:\n"
             f"{vacancy_text}\n\n"

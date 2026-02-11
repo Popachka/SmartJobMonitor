@@ -7,7 +7,7 @@ from functools import lru_cache
 
 
 class OutVacancyParse(BaseModel):
-    """Схема структурированных данных вакансии."""
+                                                  
     is_vacancy: bool = Field(
         ...,
         description="Признак того, является ли текст описанием вакансии (job description)."
@@ -35,7 +35,7 @@ class OutVacancyParse(BaseModel):
 
 @lru_cache(maxsize=1)
 def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
-    """Инициализирует агента для анализа текста вакансий."""
+                                                            
 
     system_prompt = (
         "Ты — эксперт по анализу IT-вакансий. Твоя задача: структурировать текст вакансии.\n\n"

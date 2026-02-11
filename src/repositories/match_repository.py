@@ -1,4 +1,4 @@
-# Match results repository
+                          
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.logger import get_app_logger
@@ -14,7 +14,7 @@ class MatchRepository:
     async def get_by_id(self, match_id: int) -> VacancyMatch | None:
         return await self.session.get(VacancyMatch, match_id)
 
-    async def create_match(
+    async def create(
         self,
         vacancy_id: int,
         user_id: int,

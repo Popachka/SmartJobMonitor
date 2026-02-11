@@ -25,11 +25,11 @@ class TelegramScraper:
             message_info = await self._send_to_mirror(event)
             if message_info is None:
                 return
-            vacancy_id = await self.vacancy_service.process_message(message_info)
+            vacancy_id = await self.vacancy_service.process_vacancy_message(message_info)
             if vacancy_id is None:
                 return
 
-            await self.match_service.process_vacancy(vacancy_id)
+            await self.match_service.process_vacancy_matches(vacancy_id)
 
         except Exception as exc:
             logger.exception(

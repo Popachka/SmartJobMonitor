@@ -68,7 +68,7 @@ async def require_start(message: types.Message):
 async def cmd_start(message: types.Message, state: FSMContext):
     async with async_session() as session:
         repo = UserRepository(session)
-        user = await repo.get_or_create_user(
+        user = await repo.get_or_create_by_tg_id(
             tg_id=message.from_user.id,
             username=message.from_user.username,
         )
