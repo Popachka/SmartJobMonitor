@@ -38,6 +38,22 @@ class UserRepository:
 
         return user
 
+    async def set_active_by_tg_id(self, tg_id: int, is_active: bool) -> User | None:
+        query = select(User).where(User.tg_id == tg_id)
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+
+        if user:
+            user.is_active = is_active
+            try:
+                await self.session.commit()
+                await self.session.refresh(user)
+            except Exception as e:
+                await self.session.rollback()
+                logger.error(f"Error updating user {tg_id} active status: {e}")
+                raise
+        return user
+
     async def update_resume_by_tg_id(self, tg_id: int, dto: UserResumeUpdateDTO) -> User | None:
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
@@ -57,7 +73,7 @@ class UserRepository:
         return user
 
     async def find_candidates(self, criteria: CandidateCriteria) -> list[User]:
-        clauses = [User.text_resume.is_not(None)]
+        clauses = [User.text_resume.is_not(None), User.is_active.is_(True)]
         spec_clause = (
             User.specializations.op("?|")(array(criteria.match_specializations or [], type_=Text))
             if criteria.match_specializations else false()

@@ -53,7 +53,7 @@ class IsUnregistered(BaseFilter):
         async with async_session() as session:
             repo = UserRepository(session)
             user = await repo.get_by_tg_id(tg_id=message.from_user.id)
-        return user is None
+        return user is None or not user.is_active
 
 
 @router.message(StateFilter(None), ~Command("start"), ~F.text == START_BUTTON_TEXT, IsUnregistered())
@@ -72,6 +72,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
             tg_id=message.from_user.id,
             username=message.from_user.username,
         )
+        if not user.is_active:
+            await repo.set_active_by_tg_id(tg_id=message.from_user.id, is_active=True)
 
     welcome_text = (
         f"Привет, {user.username or 'друг'}! 👋\n\n"
