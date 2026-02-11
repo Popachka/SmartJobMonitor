@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, Text
+from sqlalchemy import BigInteger, Text, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -10,7 +10,13 @@ class Vacancy(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(Text)
-    main_programming_language: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    tech_stack: Mapped[list[str]] = mapped_column(JSONB)
+
+    specializations: Mapped[list[str]] = mapped_column(JSONB, default=[])
+    primary_languages: Mapped[list[str]] = mapped_column(JSONB, default=[])
+
+    min_experience_months: Mapped[int] = mapped_column(Integer, default=0)
+
+    tech_stack: Mapped[list[str]] = mapped_column(JSONB, default=[])
+
     mirror_chat_id: Mapped[int] = mapped_column(BigInteger)
     mirror_message_id: Mapped[int] = mapped_column(BigInteger)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.agents.resume import OutResumeParse
+from src.infrastructure.agents.resume import OutResumeParse
 from io import BytesIO
 from typing import Union
 

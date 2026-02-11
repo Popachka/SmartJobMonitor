@@ -1,6 +1,5 @@
-# Работа с вакансиями (Repository)
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from src.infrastructure.shemas import VacancyCreateDTO
 from src.infrastructure.logger import get_app_logger
 from src.models.vacancy import Vacancy
 
@@ -14,22 +13,10 @@ class VacancyRepository:
     async def get_by_id(self, vacancy_id: int) -> Vacancy | None:
         return await self.session.get(Vacancy, vacancy_id)
 
-    async def create_vacancy(
-        self,
-        text: str,
-        main_programming_language: str | None,
-        tech_stack: list[str],
-        mirror_chat_id: int,
-        mirror_message_id: int,
-    ) -> Vacancy:
+    async def create_vacancy(self, dto: VacancyCreateDTO) -> Vacancy:
         try:
-            vacancy = Vacancy(
-                text=text,
-                main_programming_language=main_programming_language,
-                tech_stack=tech_stack,
-                mirror_chat_id=mirror_chat_id,
-                mirror_message_id=mirror_message_id,
-            )
+            vacancy = Vacancy(**dto.model_dump())
+
             self.session.add(vacancy)
             await self.session.commit()
             await self.session.refresh(vacancy)

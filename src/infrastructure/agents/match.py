@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
 from src.infrastructure.llm_provider import get_google_model
@@ -10,9 +10,9 @@ class OutMatchParse(BaseModel):
 
 def get_match_agent() -> Agent[None, OutMatchParse]:
     system_prompt = (
-        "Вы эксперт по подбору персонала. Получив вакансию и резюме кандидата, "
-        "оцените, насколько кандидат подходит под вакансию. "
-        "Верните оценку от 0 до 100 и короткое объяснение. "
+        "You are an expert in hiring. Given a vacancy and a resume,"
+        " return only a match score from 0 to 100. Do not include"
+        " explanations or extra fields."
     )
 
     return Agent[None, OutMatchParse](

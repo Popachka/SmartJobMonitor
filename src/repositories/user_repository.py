@@ -1,8 +1,10 @@
-﻿from sqlalchemy import select
+﻿from sqlalchemy import select, and_, or_, false, Text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import array
 from src.models.user import User
 from src.infrastructure.logger import get_app_logger
-from src.agents.resume import OutResumeParse
+from src.infrastructure.shemas import UserResumeUpdateDTO, CandidateCriteria
+
 
 logger = get_app_logger(__name__)
 
@@ -13,6 +15,11 @@ class UserRepository:
 
     async def get_by_id(self, user_id: int) -> User | None:
         return await self.session.get(User, user_id)
+
+    async def get_by_tg_id(self, tg_id: int) -> User | None:
+        query = select(User).where(User.tg_id == tg_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
 
     async def get_or_create_user(self, tg_id: int, username: str | None = None) -> User:
         query = select(User).where(User.tg_id == tg_id)
@@ -31,27 +38,43 @@ class UserRepository:
 
         return user
 
-    async def update_user_resume(self, tg_id: int, data: "OutResumeParse"):
-        if not data.is_resume:
-            logger.warning(f"Попытка обновить резюме для {tg_id}, но в данных is_resume=False. Пропускаем.")
-            return None
+    async def update_user_resume(self, tg_id: int, dto: UserResumeUpdateDTO) -> User | None:
         query = select(User).where(User.tg_id == tg_id)
         result = await self.session.execute(query)
         user = result.scalar_one_or_none()
 
         if user:
-            user.text_resume = data.full_relevant_text_from_resume
-            user.tech_stack = data.tech_stack
-            user.main_programming_language = data.main_programming_language
-            await self.session.commit()
+            for key, value in dto.model_dump().items():
+                setattr(user, key, value)
+
+            try:
+                await self.session.commit()
+                await self.session.refresh(user)
+            except Exception as e:
+                await self.session.rollback()
+                logger.error(f"Error updating user {tg_id}: {e}")
+                raise
         return user
 
-    async def get_users_by_main_programming_language(self, lang: str) -> list[User]:
-        if not lang:
-            return []
-        query = select(User).where(
-            User.main_programming_language == lang,
-            User.text_resume.is_not(None),
+    async def find_candidates(self, criteria: CandidateCriteria) -> list[User]:
+        clauses = [User.text_resume.is_not(None)]
+        spec_clause = (
+            User.specializations.op("?|")(array(criteria.match_specializations or [], type_=Text))
+            if criteria.match_specializations else false()
         )
+        lang_clause = (
+            User.primary_languages.op("?|")(array(criteria.match_languages or [], type_=Text))
+            if criteria.match_languages else false()
+        )
+
+        if criteria.match_mode == "or":
+            clauses.append(or_(spec_clause, lang_clause))
+        else:
+            clauses.append(and_(spec_clause, lang_clause))
+
+        clauses.append(User.experience_months >=
+                       criteria.min_experience_months)
+
+        query = select(User).where(and_(*clauses))
         result = await self.session.execute(query)
         return list(result.scalars().all())

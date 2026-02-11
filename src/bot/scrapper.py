@@ -47,7 +47,7 @@ class TelegramScraper:
             return None
 
         try:
-            mirror_msg = await self.client.forward_messages(
+            mirror_msg: Message = await self.client.forward_messages(
                 config.MIRROR_CHANNEL,
                 message,
             )

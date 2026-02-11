@@ -3,7 +3,7 @@ from PIL import Image
 import io
 import fitz
 from src.infrastructure.logger import get_app_logger
-from src.agents.resume import get_resume_parse_agent, OutResumeParse
+from src.infrastructure.agents.resume import get_resume_parse_agent, OutResumeParse
 from src.infrastructure.exceptions import ParserError, TooManyPagesError, NotAResumeError
 from pydantic_ai import BinaryContent
 import time

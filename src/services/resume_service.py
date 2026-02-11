@@ -1,11 +1,13 @@
-﻿from src.repositories.user_repository import UserRepository
+from src.repositories.user_repository import UserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.agents.resume import OutResumeParse
+from src.infrastructure.agents.resume import OutResumeParse
 from src.infrastructure.parsers import BaseResumeParser, ParserInput
 from src.infrastructure.exceptions import NotAResumeError
 from src.infrastructure.logger import get_app_logger
+from src.infrastructure.shemas import UserResumeUpdateDTO
 
 logger = get_app_logger(__name__)
+
 
 class ResumeService:
     def __init__(self, session: AsyncSession):
@@ -16,5 +18,13 @@ class ResumeService:
         data: OutResumeParse = await parser.extract_text(source)
         if not data.is_resume:
             raise NotAResumeError()
-        logger.info(f"Обновление резюме для пользователя {tg_id}")
-        await self.user_repo.update_user_resume(tg_id=tg_id, data=data)
+        user_dto = UserResumeUpdateDTO(
+            specializations=data.specializations,
+            primary_languages=data.primary_languages,
+            experience_months=data.experience_months,
+            tech_stack=data.tech_stack,
+            text_resume=data.full_relevant_text_from_resume
+        )
+
+        logger.info(f"Обновление профиля пользователя {tg_id}")
+        await self.user_repo.update_user_resume(tg_id=tg_id, dto=user_dto)
