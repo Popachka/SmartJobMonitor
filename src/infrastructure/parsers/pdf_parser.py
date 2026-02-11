@@ -2,11 +2,12 @@ from .base import BaseResumeParser, ParserInput
 from PIL import Image
 import io
 import fitz
-from src.infrastructure.logger import get_app_logger
+from src.infrastructure.logger import get_app_logger, trace_performance
 from src.infrastructure.agents.resume import get_resume_parse_agent, OutResumeParse
 from src.infrastructure.exceptions import ParserError, TooManyPagesError, NotAResumeError
 from pydantic_ai import BinaryContent
-import time
+from datetime import datetime
+
 logger = get_app_logger(__name__)
 
 
@@ -69,17 +70,13 @@ class PDFParser(BaseResumeParser):
             logger.error(f"Error rendering page {page.number}: {e}")
             return None
 
+    @trace_performance("Send parse resume to agent")
     async def _run_agent(self, images: list[Image.Image]) -> OutResumeParse:
-
-        start_total = time.perf_counter()
-        logger.info("Starting agent run, images=%d", len(images))
-
+        current_date = datetime.now().strftime("%B %Y")
         prompt_parts = [
-            "Please extract all text and analyze the following resume screenshots:"
+            f"Текущая дата для расчётов: {current_date}\n"
+            "Пожалуйста, извлеките весь текст и проанализируйте следующие скриншоты резюме:"
         ]
-
-        start_images = time.perf_counter()
-
         for idx, img in enumerate(images, start=1):
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
@@ -96,21 +93,10 @@ class PDFParser(BaseResumeParser):
             )
 
             logger.debug(
-                "Prepared image %d: size=%.2f KB (JPEG)",
+                "Подготовлено изображение %d: размер=%.2f КБ (JPEG)",
                 idx,
                 len(img_bytes) / 1024,
             )
-            img_byte_arr.close()  
-        images_time = time.perf_counter() - start_images
-        logger.info("Images prepared in %.3f s", images_time)
-
-        start_agent = time.perf_counter()
-
+            img_byte_arr.close()
         result = await self._agent.run(user_prompt=prompt_parts)
-
-        agent_time = time.perf_counter() - start_agent
-        logger.info("Agent run completed in %.3f s", agent_time)
-
-        total_time = time.perf_counter() - start_total
-        logger.info("Total _run_agent time: %.3f s", total_time)
         return result.output

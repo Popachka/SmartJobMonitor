@@ -1,5 +1,5 @@
 from src.infrastructure.agents.vacancy import OutVacancyParse, get_vacancy_parse_agent
-from src.infrastructure.logger import get_app_logger
+from src.infrastructure.logger import get_app_logger, trace_performance
 from src.repositories.vacancy_repository import VacancyRepository
 from src.infrastructure.shemas import MessageInfo, VacancyCreateDTO
 import time
@@ -31,13 +31,8 @@ class VacancyService:
             vacancy = await vacancy_repo.create_vacancy(vacancy_dto)
             return vacancy.id
 
+    @trace_performance("Vacancy: extract entities")
     async def _extract_entity(self, message_info: MessageInfo) -> OutVacancyParse:
-        start_ts = time.monotonic()
-
-        logger.info("Vacancy parsing started")
         prompt = f"Текст вакансии:\n{message_info.text}"
         result = await self._agent.run(user_prompt=prompt)
-        duration = time.monotonic() - start_ts
-        logger.info(
-            f"Vacancy parsing finished duration_sec: {round(duration, 3)}")
         return result.output

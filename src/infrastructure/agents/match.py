@@ -2,12 +2,15 @@
 from pydantic_ai import Agent
 
 from src.infrastructure.llm_provider import get_google_model
+from functools import lru_cache
 
 
 class OutMatchParse(BaseModel):
-    score: int = Field(ge=0, le=100, description="Оценка соответствия кандидата вакансии от 0 до 100.")
+    score: int = Field(
+        ge=0, le=100, description="Оценка соответствия кандидата вакансии от 0 до 100.")
 
 
+@lru_cache(maxsize=1)
 def get_match_agent() -> Agent[None, OutMatchParse]:
     system_prompt = (
         "You are an expert in hiring. Given a vacancy and a resume,"

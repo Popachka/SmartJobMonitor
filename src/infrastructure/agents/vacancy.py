@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from src.infrastructure.llm_provider import get_google_model
 from src.infrastructure.shemas import SPECIALIZATIONS, LANGUAGES
+from functools import lru_cache
 
 
 class OutVacancyParse(BaseModel):
@@ -32,21 +33,22 @@ class OutVacancyParse(BaseModel):
     )
 
 
+@lru_cache(maxsize=1)
 def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
     """Инициализирует агента для анализа текста вакансий."""
 
     system_prompt = (
-            "Ты — эксперт по анализу IT-вакансий. Твоя задача: структурировать текст вакансии.\n\n"
-            "Правила извлечения:\n"
-            "1. 'is_vacancy': установи false, если это любая реклама курсов, резюме или просто флуд. Нас интересуют только IT вакансии, или близкие к IT\n"
-            "2. 'specializations': выбери подходящие из списка. Если вакансия широкая (например, системный программист), выбери наиболее близкое.\n"
-            "3. 'min_experience_months':\n"
-            "   - Если указано 'от X лет', умножай X на 12.\n"
-            "   - Если указан диапазон '2-4 года', бери нижнюю границу (24).\n"
-            "   - Если годы не указаны, ориентируйся на грейд: Internship=0, Junior=12, Middle=36, Senior=60.\n"
-            "4. 'primary_languages': выбирай только из списка разрешенных (Literal). Если языка нет в списке — игнорируй.\n"
-            "5. 'tech_stack': извлекай конкретные технологии (FastAPI, PostgreSQL и т.д.)."
-        )
+        "Ты — эксперт по анализу IT-вакансий. Твоя задача: структурировать текст вакансии.\n\n"
+        "Правила извлечения:\n"
+        "1. 'is_vacancy': установи false, если это любая реклама курсов, резюме или просто флуд. Нас интересуют только IT вакансии, или близкие к IT\n"
+        "2. 'specializations': выбери подходящие из списка. Если вакансия широкая (например, системный программист), выбери наиболее близкое.\n"
+        "3. 'min_experience_months':\n"
+        "   - Если указано 'от X лет', умножай X на 12.\n"
+        "   - Если указан диапазон '2-4 года', бери нижнюю границу (24).\n"
+        "   - Если годы не указаны, ориентируйся на грейд: Internship=0, Junior=12, Middle=36, Senior=60.\n"
+        "4. 'primary_languages': выбирай только из списка разрешенных (Literal). Если языка нет в списке — игнорируй.\n"
+        "5. 'tech_stack': извлекай конкретные технологии (FastAPI, PostgreSQL и т.д.)."
+    )
 
     return Agent[None, OutVacancyParse](
         model=get_google_model(),

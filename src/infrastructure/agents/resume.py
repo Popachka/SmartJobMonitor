@@ -1,16 +1,10 @@
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from src.infrastructure.llm_provider import get_google_model
 from src.infrastructure.shemas import SPECIALIZATIONS, LANGUAGES
-from datetime import datetime
+from functools import lru_cache
 
-def get_current_date_str() -> str:
-    # Формат: "February 2026"
-    return datetime.now().strftime("%B %Y")
-
-def get_resume_system_prompt() -> str:
-    current_date = get_current_date_str()
 
 class OutResumeParse(BaseModel):
     """Схема структурированных данных резюме."""
@@ -42,9 +36,9 @@ class OutResumeParse(BaseModel):
     )
 
 
+@lru_cache(maxsize=1)
 def get_resume_parse_agent() -> Agent:
     """Инициализирует агента для парсинга резюме."""
-    current_date = get_current_date_str()
     system_prompt = (
         "Ты — эксперт по анализу технических резюме. Твоя задача: перевести неструктурированный текст в признаки.\n\n"
         "ПРАВИЛА ИЗВЛЕЧЕНИЯ:\n"
@@ -52,7 +46,6 @@ def get_resume_parse_agent() -> Agent:
         "2. 'specializations': выбери только из списка Literal.\n"
         "3. 'primary_languages': выбери только из списка Literal.\n"
         "4. 'experience_months': РАССЧИТАЙ общий коммерческий опыт.\n"
-        f"   - Текущая дата для расчетов: {current_date}.\n" 
         "   - Если указано '3 года', пиши 36.\n"
         "   - Если указаны даты (н-р, октябрь 2022 - по н.в.), вычисли количество полных месяцев.\n"
         "   - Игнорируй пет-проекты.\n"

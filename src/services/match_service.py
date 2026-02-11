@@ -1,6 +1,6 @@
 ﻿from src.infrastructure.agents.match import OutMatchParse, get_match_agent
 from src.bot.notifier import BotNotifier
-from src.infrastructure.logger import get_app_logger
+from src.infrastructure.logger import get_app_logger, trace_performance
 from src.repositories.match_repository import MatchRepository
 from src.repositories.user_repository import UserRepository
 from src.infrastructure.shemas import VacancyData, UserData, CandidateCriteria
@@ -61,10 +61,8 @@ class MatchService:
             score=score_result.score,
         )
 
+    @trace_performance("Score_match")
     async def _score_match(self, vacancy_text: str, resume_text: str) -> OutMatchParse:
-        start_ts = time.monotonic()
-
-        logger.info("Match scoring started")
         prompt = (
             "Vacancy:\n"
             f"{vacancy_text}\n\n"
@@ -72,10 +70,4 @@ class MatchService:
             f"{resume_text}"
         )
         result = await self._agent.run(user_prompt=prompt)
-        if not isinstance(result.output, OutMatchParse):
-            raise ValueError("Match parse returned invalid type")
-
-        duration = time.monotonic() - start_ts
-        logger.info(
-            f"Match scoring finished duration_sec: {round(duration, 3)}")
         return result.output
