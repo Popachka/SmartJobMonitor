@@ -24,6 +24,14 @@ class Settings(BaseSettings):
 
     GOOGLE_API_KEY: str
     GOOGLE_MODEL: str = 'gemini-2.5-flash'
+
+    SENTRY_DSN: str | None = None
+    SENTRY_ENV: str = "development"
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
+    METRICS_ENABLED: bool = True
+    METRICS_ADDR: str = "0.0.0.0"
+    METRICS_PORT: int = 8000
     @computed_field
     @property
     def ASYNC_SQLALCHEMY_DATABASE_URI(self) -> str:

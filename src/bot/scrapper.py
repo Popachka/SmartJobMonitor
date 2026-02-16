@@ -8,6 +8,7 @@ from aiogram import Bot
 from src.services.match_service import MatchService
 from src.bot.notifier import BotNotifier
 from telethon.tl.custom.message import Message
+from src.infrastructure.metrics import track
 logger = get_app_logger(__name__)
 
 
@@ -21,20 +22,22 @@ class TelegramScraper:
             session_factory, notifier=BotNotifier(bot))
 
     async def _message_handler(self, event: events.NewMessage.Event):
-        try:
-            message_info = await self._send_to_mirror(event)
-            if message_info is None:
-                return
-            vacancy_id = await self.vacancy_service.process_vacancy_message(message_info)
-            if vacancy_id is None:
-                return
+        async with track("telegram.message_handler") as tracker:
+            try:
+                message_info = await self._send_to_mirror(event)
+                if message_info is None:
+                    return
+                vacancy_id = await self.vacancy_service.process_vacancy_message(message_info)
+                if vacancy_id is None:
+                    return
 
-            await self.match_service.process_vacancy_matches(vacancy_id)
+                await self.match_service.process_vacancy_matches(vacancy_id)
 
-        except Exception as exc:
-            logger.exception(
-                f"Failed to process Telegram message {exc}",
-            )
+            except Exception as exc:
+                tracker.mark_error(exc)
+                logger.exception(
+                    f"Failed to process Telegram message {exc}",
+                )
 
     async def _send_to_mirror(self, event: events.NewMessage.Event) -> MessageInfo | None:
         message: Message = event.message

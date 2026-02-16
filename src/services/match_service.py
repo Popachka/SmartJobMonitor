@@ -7,6 +7,7 @@ from src.infrastructure.shemas import VacancyData, UserData, CandidateCriteria
 from src.repositories.vacancy_repository import VacancyRepository
 import time
 from src.infrastructure.exceptions import VacancyNotFoundError
+from src.infrastructure.metrics import track
 logger = get_app_logger(__name__)
 
 
@@ -17,49 +18,50 @@ class MatchService:
         self._agent = get_match_agent()
 
     async def process_vacancy_matches(self, vacancy_id: int) -> None:
-        async with self.session_factory() as session:
-            v_repo = VacancyRepository(session)
-            u_repo = UserRepository(session)
+        async with track("match.process_matches"):
+            async with self.session_factory() as session:
+                v_repo = VacancyRepository(session)
+                u_repo = UserRepository(session)
 
-            vacancy = await v_repo.get_by_id(vacancy_id)
-            if not vacancy:
-                raise VacancyNotFoundError
-            criteria = CandidateCriteria(
-                min_experience_months=int(vacancy.min_experience_months * 0.8),
-                match_specializations=vacancy.specializations,
-                match_languages=vacancy.primary_languages,
-                match_mode="and",
-            )
-            users = await u_repo.find_candidates(criteria)
-            vacancy_data = VacancyData.model_validate(vacancy)
-            candidates = [UserData.model_validate(u) for u in users]
+                vacancy = await v_repo.get_by_id(vacancy_id)
+                if not vacancy:
+                    raise VacancyNotFoundError
+                criteria = CandidateCriteria(
+                    min_experience_months=int(vacancy.min_experience_months * 0.8),
+                    match_specializations=vacancy.specializations,
+                    match_languages=vacancy.primary_languages,
+                    match_mode="and",
+                )
+                users = await u_repo.find_candidates(criteria)
+                vacancy_data = VacancyData.model_validate(vacancy)
+                candidates = [UserData.model_validate(u) for u in users]
 
-        for user_data in candidates:
-            try:
-                logger.info(f'Send vacancy to {user_data.tg_id}')
-                await self._process_candidate_match(vacancy_data, user_data)
-            except Exception as e:
-                logger.error(f"Ошибка матчинга для юзера {user_data.id}: {e}")
+            for user_data in candidates:
+                try:
+                    logger.info(f'Send vacancy to {user_data.tg_id}')
+                    await self._process_candidate_match(vacancy_data, user_data)
+                except Exception as e:
+                    logger.error(f"Ошибка матчинга для юзера {user_data.id}: {e}")
 
     async def _process_candidate_match(self, vacancy: VacancyData, user: UserData) -> None:
+        async with track("match.process_candidate"):
+            resume_text = user.text_resume
+            score_result = await self._score_vacancy_resume(vacancy_text=vacancy.text, resume_text=resume_text)
 
-        resume_text = user.text_resume
-        score_result = await self._score_vacancy_resume(vacancy_text=vacancy.text, resume_text=resume_text)
+            async with self.session_factory() as session:
+                match_repo = MatchRepository(session)
+                await match_repo.create(
+                    vacancy_id=vacancy.id,
+                    user_id=user.id,
+                    score=score_result.score,
+                )
 
-        async with self.session_factory() as session:
-            match_repo = MatchRepository(session)
-            await match_repo.create(
-                vacancy_id=vacancy.id,
-                user_id=user.id,
+            await self.notifier.send_match(
+                user_tg_id=user.tg_id,
+                mirror_chat_id=vacancy.mirror_chat_id,
+                mirror_message_id=vacancy.mirror_message_id,
                 score=score_result.score,
             )
-
-        await self.notifier.send_match(
-            user_tg_id=user.tg_id,
-            mirror_chat_id=vacancy.mirror_chat_id,
-            mirror_message_id=vacancy.mirror_message_id,
-            score=score_result.score,
-        )
 
     @trace_performance("Score_match")
     async def _score_vacancy_resume(self, vacancy_text: str, resume_text: str) -> OutMatchParse:

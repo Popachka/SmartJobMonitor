@@ -2,6 +2,7 @@ from src.infrastructure.agents.vacancy import OutVacancyParse, get_vacancy_parse
 from src.infrastructure.logger import get_app_logger, trace_performance
 from src.repositories.vacancy_repository import VacancyRepository
 from src.infrastructure.shemas import MessageInfo, VacancyCreateDTO
+from src.infrastructure.metrics import track
 import time
 logger = get_app_logger(__name__)
 
@@ -12,24 +13,25 @@ class VacancyService:
         self._agent = get_vacancy_parse_agent()
 
     async def process_vacancy_message(self, message_info: MessageInfo) -> int | None:
-        parse_result = await self._parse_vacancy(message_info)
-        if not parse_result.is_vacancy or not message_info.text:
-            logger.info("Сообщение не является вакансией")
-            return None
+        async with track("vacancy.process_message"):
+            parse_result = await self._parse_vacancy(message_info)
+            if not parse_result.is_vacancy or not message_info.text:
+                logger.info("Message is not a vacancy")
+                return None
 
-        vacancy_dto = VacancyCreateDTO(
-            text=message_info.text,
-            specializations=parse_result.specializations,
-            primary_languages=parse_result.primary_languages,
-            min_experience_months=parse_result.min_experience_months,
-            tech_stack=parse_result.tech_stack,
-            mirror_chat_id=message_info.mirror_chat_id,
-            mirror_message_id=message_info.mirror_message_id,
-        )
-        async with self.session_factory() as session:
-            vacancy_repo = VacancyRepository(session)
-            vacancy = await vacancy_repo.create(vacancy_dto)
-            return vacancy.id
+            vacancy_dto = VacancyCreateDTO(
+                text=message_info.text,
+                specializations=parse_result.specializations,
+                primary_languages=parse_result.primary_languages,
+                min_experience_months=parse_result.min_experience_months,
+                tech_stack=parse_result.tech_stack,
+                mirror_chat_id=message_info.mirror_chat_id,
+                mirror_message_id=message_info.mirror_message_id,
+            )
+            async with self.session_factory() as session:
+                vacancy_repo = VacancyRepository(session)
+                vacancy = await vacancy_repo.create(vacancy_dto)
+                return vacancy.id
 
     @trace_performance("Vacancy: extract entities")
     async def _parse_vacancy(self, message_info: MessageInfo) -> OutVacancyParse:
