@@ -15,19 +15,20 @@ class ResumeService:
         self.session = session
         self.user_repo = UserRepository(session=session)
 
-    async def process_resume(self, source: ParserInput, parser: BaseResumeParser, tg_id: int) -> None:
+    async def parse_resume(self, source: ParserInput, parser: BaseResumeParser) -> UserResumeUpdateDTO:
         async with track("resume.process"):
             data: OutResumeParse = await parser.extract_text(source)
             if not data.is_resume:
                 raise NotAResumeError()
-            user_dto = UserResumeUpdateDTO(
+            return UserResumeUpdateDTO(
                 specializations=data.specializations,
                 primary_languages=data.primary_languages,
                 experience_months=data.experience_months,
                 tech_stack=data.tech_stack,
-                text_resume=data.full_relevant_text_from_resume
+                text_resume=data.full_relevant_text_from_resume,
             )
 
-            logger.info(f"Updating user profile {tg_id}")
-            await self.user_repo.update_resume_by_tg_id(tg_id=tg_id, dto=user_dto)
+    async def save_resume(self, tg_id: int, dto: UserResumeUpdateDTO) -> None:
+        logger.info(f"Updating user profile {tg_id}")
+        await self.user_repo.update_resume_by_tg_id(tg_id=tg_id, dto=dto)
 

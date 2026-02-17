@@ -2,7 +2,7 @@ from telethon import TelegramClient, events
 from src.infrastructure.config import config
 from src.infrastructure.logger import get_app_logger
 from src.services.vacancy_service import VacancyService
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from src.infrastructure.shemas import MessageInfo
 from aiogram import Bot
 from src.services.match_service import MatchService
@@ -17,27 +17,52 @@ class TelegramScraper:
         self.client = TelegramClient(
             'first_session', config.API_ID, config.API_HASH)
         self.session_factory = session_factory
-        self.vacancy_service = VacancyService(session_factory)
-        self.match_service = MatchService(
-            session_factory, notifier=BotNotifier(bot))
+        self._bot = bot
 
     async def _message_handler(self, event: events.NewMessage.Event):
-        async with track("telegram.message_handler") as tracker:
+        session: AsyncSession
+        async with track("telegram.message_handler"):
             try:
                 message_info = await self._send_to_mirror(event)
-                if message_info is None:
-                    return
-                vacancy_id = await self.vacancy_service.process_vacancy_message(message_info)
-                if vacancy_id is None:
+                if not message_info:
                     return
 
-                await self.match_service.process_vacancy_matches(vacancy_id)
+                async with self.session_factory() as session:
+                    v_service = VacancyService(session)
+                    m_service = MatchService(session)
+
+                    parse_result = await v_service.parse_message(message_info)
+                    if not parse_result:
+                        return
+
+                    async with session.begin():
+                        vacancy_id = await v_service.save_vacancy(message_info, parse_result)
+
+                    vacancy_data, candidates = await m_service.get_potential_candidates(vacancy_id)
+
+                for user_data in candidates:
+                    try:
+                        async with self.session_factory() as session:
+                            service = MatchService(
+                                session, notifier=BotNotifier(self._bot))
+                            score_result = await service.score_match(vacancy_data, user_data)
+                            async with session.begin():
+                                await service.save_match(
+                                    vacancy=vacancy_data,
+                                    user=user_data,
+                                    score=score_result.score,
+                                )
+                            await service.notify_match(
+                                vacancy=vacancy_data,
+                                user=user_data,
+                                score=score_result.score,
+                            )
+                    except Exception as exc:
+                        logger.error(
+                            f"Match failed for user {user_data.id}: {exc}")
 
             except Exception as exc:
-                tracker.mark_error(exc)
-                logger.exception(
-                    f"Failed to process Telegram message {exc}",
-                )
+                logger.exception(f"Handler failed: {exc}")
 
     async def _send_to_mirror(self, event: events.NewMessage.Event) -> MessageInfo | None:
         message: Message = event.message

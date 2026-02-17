@@ -20,17 +20,13 @@ class MatchRepository:
         user_id: int,
         score: int,
     ) -> VacancyMatch:
-        try:
-            match = VacancyMatch(
-                vacancy_id=vacancy_id,
-                user_id=user_id,
-                score=score,
-            )
-            self.session.add(match)
-            await self.session.commit()
-            await self.session.refresh(match)
-            return match
-        except Exception as e:
-            await self.session.rollback()
-            logger.error(f"Failed to save match: {e}")
-            raise
+        match = VacancyMatch(
+            vacancy_id=vacancy_id,
+            user_id=user_id,
+            score=score,
+        )
+        self.session.add(match)
+        await self.session.flush()
+        await self.session.refresh(match)
+        return match
+

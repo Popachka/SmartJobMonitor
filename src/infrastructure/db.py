@@ -5,11 +5,6 @@ engine = create_async_engine(config.ASYNC_SQLALCHEMY_DATABASE_URI, echo = False,
 
 async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-async def get_session():
-    async with async_session() as session:
-        yield session
-
-
 async def init_db():
     from src.models.base import Base
     import src.models.vacancy

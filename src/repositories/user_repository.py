@@ -27,14 +27,14 @@ class UserRepository:
         user = result.scalar_one_or_none()
 
         if not user:
-            logger.info(f"Юзер {tg_id} не найден. Создаем новую запись...")
+            logger.info(f"???? {tg_id} ?? ??????. ??????? ????? ??????...")
             user = User(tg_id=tg_id, username=username)
             self.session.add(user)
-            await self.session.commit()
+            await self.session.flush()
             await self.session.refresh(user)
-            logger.info(f"Юзер {tg_id} успешно сохранен с ID {user.id}")
+            logger.info(f"???? {tg_id} ??????? ???????? ? ID {user.id}")
         else:
-            logger.info(f"Юзер {tg_id} уже существует (ID {user.id})")
+            logger.info(f"???? {tg_id} ??? ?????????? (ID {user.id})")
 
         return user
 
@@ -45,13 +45,8 @@ class UserRepository:
 
         if user:
             user.is_active = is_active
-            try:
-                await self.session.commit()
-                await self.session.refresh(user)
-            except Exception as e:
-                await self.session.rollback()
-                logger.error(f"Error updating user {tg_id} active status: {e}")
-                raise
+            await self.session.flush()
+            await self.session.refresh(user)
         return user
 
     async def update_resume_by_tg_id(self, tg_id: int, dto: UserResumeUpdateDTO) -> User | None:
@@ -63,13 +58,8 @@ class UserRepository:
             for key, value in dto.model_dump().items():
                 setattr(user, key, value)
 
-            try:
-                await self.session.commit()
-                await self.session.refresh(user)
-            except Exception as e:
-                await self.session.rollback()
-                logger.error(f"Error updating user {tg_id}: {e}")
-                raise
+            await self.session.flush()
+            await self.session.refresh(user)
         return user
 
     async def find_candidates(self, criteria: CandidateCriteria) -> list[User]:

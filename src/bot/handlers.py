@@ -67,13 +67,14 @@ async def require_start(message: types.Message):
 @router.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     async with async_session() as session:
-        repo = UserRepository(session)
-        user = await repo.get_or_create_by_tg_id(
-            tg_id=message.from_user.id,
-            username=message.from_user.username,
-        )
-        if not user.is_active:
-            await repo.set_active_by_tg_id(tg_id=message.from_user.id, is_active=True)
+        async with session.begin():
+            repo = UserRepository(session)
+            user = await repo.get_or_create_by_tg_id(
+                tg_id=message.from_user.id,
+                username=message.from_user.username,
+            )
+            if not user.is_active:
+                await repo.set_active_by_tg_id(tg_id=message.from_user.id, is_active=True)
 
     welcome_text = (
         f"Привет, {user.username or 'друг'}! 👋\n\n"
@@ -164,7 +165,9 @@ async def handle_resume_document(message: types.Message, state: FSMContext):
 
         async with async_session() as session:
             service = ResumeService(session=session)
-            await service.process_resume(source=buffer, parser=parser, tg_id=message.from_user.id)
+            user_dto = await service.parse_resume(source=buffer, parser=parser)
+            async with session.begin():
+                await service.save_resume(tg_id=message.from_user.id, dto=user_dto)
 
         current_state = await state.get_state()
         if current_state != ResumeStates.processing_resume:
