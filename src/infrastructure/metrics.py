@@ -19,6 +19,11 @@ ERRORS_TOTAL = Counter(
     "Total number of errors",
     ["operation", "error_type"],
 )
+REQUESTS_TOTAL = Counter(
+    "job_monitor_requests_total",
+    "Total number of operations started",
+    ["operation"],
+)
 INFLIGHT = Gauge(
     "job_monitor_inflight",
     "Number of inflight operations",
@@ -42,6 +47,7 @@ class OperationTracker:
 
     def start(self) -> None:
         self._start_ts = time.monotonic()
+        REQUESTS_TOTAL.labels(operation=self.operation).inc()
         INFLIGHT.labels(operation=self.operation).inc()
 
     def mark_error(self, error: Exception) -> None:
