@@ -1,4 +1,10 @@
+import asyncio
 from telethon import TelegramClient, events
+from telethon.errors import (
+    FloodWaitError,
+    PhoneNumberInvalidError,
+    SessionPasswordNeededError,
+)
 from src.infrastructure.config import config
 from src.infrastructure.logger import get_app_logger
 from src.services.vacancy_service import VacancyService
@@ -18,6 +24,76 @@ class TelegramScraper:
             'first_session', config.API_ID, config.API_HASH)
         self.session_factory = session_factory
         self._bot = bot
+
+    @staticmethod
+    def _normalize_chat_ref(chat: str | int) -> str | int:
+        if isinstance(chat, int):
+            return chat
+        value = str(chat).strip()
+        if value.startswith("https://"):
+            value = value[len("https://"):]
+        elif value.startswith("http://"):
+            value = value[len("http://"):]
+        if value.startswith("t.me/"):
+            value = value[len("t.me/"):]
+        if value.startswith("@") or value.startswith("-100"):
+            return value
+        if value.lstrip("-").isdigit():
+            return value
+        return f"@{value}"
+
+    def _normalized_channels(self) -> list[str | int]:
+        return [self._normalize_chat_ref(chat) for chat in config.CHANNELS]
+
+    @staticmethod
+    def _print_qr_to_terminal(url: str) -> None:
+        try:
+            import qrcode
+        except ImportError:
+            logger.warning("Install 'qrcode': pip install qrcode")
+            return
+        qr = qrcode.QRCode(border=1)
+        qr.add_data(url)
+        qr.make(fit=True)
+        print("\nScan this QR in Telegram -> Settings -> Devices -> Link Desktop Device:\n")
+        qr.print_ascii(invert=True)
+        print()
+
+    async def _authorize(self) -> None:
+        if not self.client.is_connected():
+            await self.client.connect()
+
+        if await self.client.is_user_authorized():
+            logger.info("Telethon session already authorized.")
+            return
+
+        login_mode = (config.TELETHON_LOGIN_MODE or "qr").lower()
+        if login_mode == "phone":
+            try:
+                await self.client.start(phone=config.TELEGRAM_PHONE)
+                return
+            except PhoneNumberInvalidError:
+                logger.error("Invalid phone format. Use +79123456789")
+                raise
+            except FloodWaitError as exc:
+                logger.error(f"Telegram flood wait: {exc.seconds}s")
+                raise
+
+        while not await self.client.is_user_authorized():
+            qr_login = await self.client.qr_login()
+            logger.info("Open this link in Telegram app to confirm login:")
+            logger.info(qr_login.url)
+            self._print_qr_to_terminal(qr_login.url)
+            try:
+                await qr_login.wait(timeout=60)
+            except asyncio.TimeoutError:
+                logger.warning("QR timed out, generating a new one...")
+                await qr_login.recreate()
+            except SessionPasswordNeededError:
+                if not config.TELEGRAM_2FA_PASSWORD:
+                    logger.error("2FA is enabled. Set TELEGRAM_2FA_PASSWORD in .env")
+                    raise
+                await self.client.sign_in(password=config.TELEGRAM_2FA_PASSWORD)
 
     async def _message_handler(self, event: events.NewMessage.Event):
         session: AsyncSession
@@ -96,10 +172,12 @@ class TelegramScraper:
         )
 
     async def start(self):
+        channels = self._normalized_channels()
+        logger.info(f"Scraper listens channels: {channels}")
         self.client.add_event_handler(
             self._message_handler,
-            events.NewMessage(chats=config.CHANNELS)
+            events.NewMessage(chats=channels)
         )
-        await self.client.start()
+        await self._authorize()
         logger.info("Scraper started.")
         await self.client.run_until_disconnected()

@@ -11,6 +11,9 @@ class Settings(BaseSettings):
 
     API_ID: int
     API_HASH: str
+    TELEGRAM_PHONE: str | None = None
+    TELETHON_LOGIN_MODE: str = "qr"
+    TELEGRAM_2FA_PASSWORD: str | None = None
     BOT_TOKEN: str
     CHANNELS: list[str]
     MIRROR_CHANNEL: int
