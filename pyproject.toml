@@ -23,6 +23,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "pydantic-ai>=1.63.0",
     "pydantic-settings>=2.13.1",
+    "qrcode>=8.2",
     "sqlalchemy>=2.0.47",
     "telethon>=1.42.0",
 ]
