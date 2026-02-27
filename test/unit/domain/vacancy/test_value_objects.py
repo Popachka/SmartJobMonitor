@@ -29,11 +29,11 @@ def test_primary_languages_filtering():
 
 def test_salary_creation_and_validation():
     s = Salary.create(amount=150000, currency=" usd ")
-    assert s.min_amount == 150000
+    assert s.amount == 150000
     assert s.currency == CurrencyType.USD
 
     s_default = Salary.create(amount=100)
-    assert s_default.currency == CurrencyType.RUB
+    assert s_default.currency is None
 
     with pytest.raises(ValueError, match="cannot be negative"):
         Salary.create(amount=-100)
@@ -63,4 +63,4 @@ def test_vo_immutability():
         stack.items = frozenset(["Java"])
 
     with pytest.raises(FrozenInstanceError):
-        salary.min_amount = 200
+        salary.amount = 200

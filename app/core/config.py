@@ -1,6 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
 from pydantic_core import MultiHostUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -24,7 +25,6 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
 
-
     GOOGLE_API_KEY: str
     GOOGLE_MODEL: str = 'gemini-2.5-flash'
 
@@ -35,12 +35,13 @@ class Settings(BaseSettings):
     METRICS_ENABLED: bool = True
     METRICS_ADDR: str = "0.0.0.0"
     METRICS_PORT: int = 8000
+
     @computed_field
     @property
     def ASYNC_SQLALCHEMY_DATABASE_URI(self) -> str:
         return str(
             MultiHostUrl.build(
-                scheme="postgresql+asyncpg",  
+                scheme="postgresql+asyncpg",
                 username=self.POSTGRES_USER,
                 password=self.POSTGRES_PASSWORD,
                 host=self.POSTGRES_SERVER,
@@ -48,5 +49,6 @@ class Settings(BaseSettings):
                 path=self.POSTGRES_DB,
             )
         )
+
 
 config = Settings()

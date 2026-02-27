@@ -31,13 +31,13 @@ class Vacancy:
         text: str,
         specializations_raw: list[str],
         languages_raw: list[str],
-        tech_stack_raw: list[str],
+        tech_stack_raw: list[str] | None,
         min_experience_months: int,
         mirror_chat_id: int,
         mirror_message_id: int,
         work_format: WorkFormat,
         salary_amount: int | None = None,
-        salary_currency: str = "RUB",
+        salary_currency: str | None = None,
         created_at: datetime | None = None
     ) -> "Vacancy":
         if not text or not text.strip():
@@ -56,8 +56,6 @@ class Vacancy:
             )
 
         stack = TechStack.create(tech_stack_raw)
-        if not stack.items:
-            raise ValidationError("Технологический стек не может быть пустым.")
 
         salary_vo = Salary.create(
             amount=salary_amount, currency=salary_currency)

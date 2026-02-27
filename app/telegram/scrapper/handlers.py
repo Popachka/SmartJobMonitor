@@ -1,18 +1,80 @@
-from telethon import TelegramClient, events
+import asyncio
 
+from telethon import TelegramClient, events
+from telethon.tl.custom.message import Message
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.exc import IntegrityError
+
+from app.application.dto import InfoRawVacancy
+from app.application.ports.llm_port import ILLMExtractor
+from app.application.services.vacancy_service import VacancyService
 from app.core.config import config
 from app.core.logger import get_app_logger
+from app.infrastructure.db import VacancyUnitOfWork
+from app.domain.vacancy.entities import Vacancy
+from app.domain.vacancy.value_objects import ContentHash
 from app.telegram.scrapper.channels import normalized_channels
 
 logger = get_app_logger(__name__)
 
 
 class TelegramScraper:
-    def __init__(self, client: TelegramClient):
+    def __init__(
+        self,
+        client: TelegramClient,
+        session_factory: async_sessionmaker[AsyncSession],
+        extractor: ILLMExtractor,
+    ):
         self.client = client
+        self._session_factory = session_factory
+        self._extractor = extractor
+        self._hash_locks: dict[str, asyncio.Lock] = {}
 
     async def _message_handler(self, event: events.NewMessage.Event) -> None:
-        pass
+        try:
+            logger.info(
+                f"Received message (chat_id={event.chat_id}, message_id={event.message.id})"
+            )
+            message_info = await self._send_to_mirror(event)
+            if not message_info:
+                return
+
+            content_hash = Vacancy.compute_content_hash(message_info.text).value
+            lock = self._get_hash_lock(content_hash)
+            async with lock:
+                check_uow = VacancyUnitOfWork(self._session_factory)
+                async with check_uow:
+                    exists = await check_uow.vacancies.exists_by_content_hash(
+                        ContentHash(content_hash)
+                    )
+                if exists:
+                    logger.info(
+                        f"Duplicate vacancy skipped before parse (content_hash={content_hash}, "
+                        f"chat_id={event.chat_id}, message_id={event.message.id})"
+                    )
+                    return
+
+                uow = VacancyUnitOfWork(self._session_factory)
+                v_service = VacancyService(uow, self._extractor)
+                parse_result = await v_service.parse_message(message_info)
+                if not parse_result:
+                    return
+                try:
+                    await v_service.save_vacancy(message_info, parse_result)
+                    logger.info(
+                        f"Vacancy saved (content_hash={content_hash}, "
+                        f"chat_id={event.chat_id}, message_id={event.message.id})"
+                    )
+                except IntegrityError:
+                    logger.info(
+                        f"Duplicate vacancy skipped (content_hash={content_hash}, "
+                        f"chat_id={event.chat_id}, message_id={event.message.id})"
+                    )
+        except Exception:
+            logger.exception(
+                f"Handler failed (chat_id={event.chat_id}, message_id={event.message.id})"
+            )
 
     async def start(self) -> None:
         channels = normalized_channels(config.CHANNELS)
@@ -23,3 +85,50 @@ class TelegramScraper:
         )
         logger.info("Scraper started.")
         await self.client.run_until_disconnected()
+
+    async def _send_to_mirror(self, event: events.NewMessage.Event) -> InfoRawVacancy | None:
+        message: Message = event.message
+        text = (message.text or "")
+
+        if not text:
+            logger.info(
+                f"Skipping message with empty text (chat_id={event.chat_id}, "
+                f"message_id={message.id})"
+            )
+            return None
+
+        try:
+            mirror_msg: Message = await self.client.forward_messages(
+                config.MIRROR_CHANNEL,
+                message,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to forward message to mirror",
+                extra={
+                    "source_chat": event.chat_id,
+                    "source_message_id": message.id,
+                },
+            )
+            return None
+
+        logger.info(
+            f"Message forwarded to mirror (source_chat_id={event.chat_id}, "
+            f"source_message_id={message.id}, mirror_chat_id={mirror_msg.chat_id}, "
+            f"mirror_message_id={mirror_msg.id})"
+        )
+
+        return InfoRawVacancy(
+            mirror_chat_id=mirror_msg.chat_id,
+            mirror_message_id=mirror_msg.id,
+            text=text,
+            chat_id=event.chat_id,
+            message_id=message.id,
+        )
+
+    def _get_hash_lock(self, content_hash: str) -> asyncio.Lock:
+        lock = self._hash_locks.get(content_hash)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._hash_locks[content_hash] = lock
+        return lock

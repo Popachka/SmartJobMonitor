@@ -98,15 +98,18 @@ class TechStack:
 
 @dataclass(frozen=True, slots=True)
 class Salary:
-    min_amount: int | None
-    currency: CurrencyType
+    amount: int | None
+    currency: CurrencyType | None
 
     @classmethod
-    def create(cls, amount: int | None = None, currency: str = "RUB") -> "Salary":
+    def create(cls, amount: int | None = None, currency: str | None = None) -> "Salary":
         if amount is not None and amount < 0:
             raise ValueError("Salary cannot be negative")
 
+        if currency is None or not currency.strip():
+            return cls(amount=amount, currency=None)
+
         return cls(
-            min_amount=amount,
-            currency=CurrencyType(currency.upper().strip())
+            amount=amount,
+            currency=CurrencyType(currency.upper().strip()),
         )

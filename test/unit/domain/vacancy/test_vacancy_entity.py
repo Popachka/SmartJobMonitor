@@ -31,7 +31,7 @@ def test_vacancy_create_success(base_vacancy_params):
     assert SpecializationType.BACKEND in vacancy.specializations.items
     assert LanguageType.PYTHON in vacancy.primary_languages.items
     assert "Fastapi" in vacancy.tech_stack.items
-    assert vacancy.salary.min_amount == 200000
+    assert vacancy.salary.amount == 200000
 
 
 def test_vacancy_content_hash_logic(base_vacancy_params):
