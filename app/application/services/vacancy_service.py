@@ -5,8 +5,7 @@ from app.application.ports.llm_port import ILLMExtractor
 from app.application.ports.unit_of_work import VacancyUnitOfWork
 from app.core.logger import get_app_logger
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.exceptions import ValidationError
-from app.domain.vacancy.value_objects import WorkFormat, VacancyId
+from app.domain.vacancy.value_objects import VacancyId
 
 logger = get_app_logger(__name__)
 

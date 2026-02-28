@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Bot
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -32,7 +30,6 @@ class TelegramScraper:
         self.client = client
         self._session_factory = session_factory
         self._extractor = extractor
-        self._hash_locks: dict[str, asyncio.Lock] = {}
         self._notification_service = TelegramNotificationService(bot)
 
     async def _message_handler(self, event: events.NewMessage.Event) -> None:
@@ -45,54 +42,52 @@ class TelegramScraper:
                 return
 
             content_hash = Vacancy.compute_content_hash(message_info.text).value
-            lock = self._get_hash_lock(content_hash)
-            async with lock:
-                check_uow = VacancyUnitOfWork(self._session_factory)
-                async with check_uow:
-                    exists = await check_uow.vacancies.exists_by_content_hash(
-                        ContentHash(content_hash)
-                    )
-                if exists:
-                    logger.info(
-                        f"Duplicate vacancy skipped before parse (content_hash={content_hash}, "
-                        f"chat_id={event.chat_id}, message_id={event.message.id})"
-                    )
-                    return
+            check_uow = VacancyUnitOfWork(self._session_factory)
+            async with check_uow:
+                exists = await check_uow.vacancies.exists_by_content_hash(
+                    ContentHash(content_hash)
+                )
+            if exists:
+                logger.info(
+                    f"Duplicate vacancy skipped before parse (content_hash={content_hash}, "
+                    f"chat_id={event.chat_id}, message_id={event.message.id})"
+                )
+                return
 
-                uow = VacancyUnitOfWork(self._session_factory)
-                v_service = VacancyService(uow, self._extractor)
-                parse_result = await v_service.parse_message(message_info)
-                if not parse_result:
-                    return
+            uow = VacancyUnitOfWork(self._session_factory)
+            v_service = VacancyService(uow, self._extractor)
+            parse_result = await v_service.parse_message(message_info)
+            if not parse_result:
+                return
+            try:
+                vacancy_id = await v_service.save_vacancy(message_info, parse_result)
+                logger.info(
+                    f"Vacancy saved (content_hash={content_hash}, "
+                    f"chat_id={event.chat_id}, message_id={event.message.id})"
+                )
                 try:
-                    vacancy_id = await v_service.save_vacancy(message_info, parse_result)
-                    logger.info(
-                        f"Vacancy saved (content_hash={content_hash}, "
-                        f"chat_id={event.chat_id}, message_id={event.message.id})"
+                    matcher = MatcherService(
+                        MatchingUnitOfWork(self._session_factory),
+                        self._notification_service,
                     )
-                    try:
-                        matcher = MatcherService(
-                            MatchingUnitOfWork(self._session_factory),
-                            self._notification_service,
-                        )
-                        matched_user_ids = await matcher.match_vacancy(vacancy_id)
-                        logger.info(
-                            "Matching completed for vacancy %s: %s users ready for dispatch",
-                            vacancy_id.value,
-                            len(matched_user_ids),
-                        )
-                    except Exception:
-                        logger.exception(
-                            "Matching failed (vacancy_id=%s, chat_id=%s, message_id=%s)",
-                            vacancy_id.value,
-                            event.chat_id,
-                            event.message.id,
-                        )
-                except IntegrityError:
+                    matched_user_ids = await matcher.match_vacancy(vacancy_id)
                     logger.info(
-                        f"Duplicate vacancy skipped (content_hash={content_hash}, "
-                        f"chat_id={event.chat_id}, message_id={event.message.id})"
+                        "Matching completed for vacancy %s: %s users ready for dispatch",
+                        vacancy_id.value,
+                        len(matched_user_ids),
                     )
+                except Exception:
+                    logger.exception(
+                        "Matching failed (vacancy_id=%s, chat_id=%s, message_id=%s)",
+                        vacancy_id.value,
+                        event.chat_id,
+                        event.message.id,
+                    )
+            except IntegrityError:
+                logger.info(
+                    f"Duplicate vacancy skipped (content_hash={content_hash}, "
+                    f"chat_id={event.chat_id}, message_id={event.message.id})"
+                )
         except Exception:
             logger.exception(
                 f"Handler failed (chat_id={event.chat_id}, message_id={event.message.id})"
@@ -148,9 +143,3 @@ class TelegramScraper:
             message_id=message.id,
         )
 
-    def _get_hash_lock(self, content_hash: str) -> asyncio.Lock:
-        lock = self._hash_locks.get(content_hash)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._hash_locks[content_hash] = lock
-        return lock
