@@ -17,3 +17,11 @@ class IUserRepository(Protocol):
 
     async def upsert(self, user: User) -> None:
         ...
+
+    async def find_prefiltered_candidates(
+        self,
+        specializations: set[str],
+        primary_languages: set[str],
+        is_active: bool = True,
+    ) -> list[User]:
+        ...

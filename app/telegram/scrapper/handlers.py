@@ -1,19 +1,20 @@
 import asyncio
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from sqlalchemy.exc import IntegrityError
-
 from app.application.dto import InfoRawVacancy
 from app.application.ports.llm_port import ILLMExtractor
+from app.application.services.matcher_service import MatcherService
 from app.application.services.vacancy_service import VacancyService
 from app.core.config import config
 from app.core.logger import get_app_logger
-from app.infrastructure.db import VacancyUnitOfWork
 from app.domain.vacancy.entities import Vacancy
 from app.domain.vacancy.value_objects import ContentHash
+from app.infrastructure.db import MatchingUnitOfWork, VacancyUnitOfWork
+from app.infrastructure.notifications import NoopNotificationService
 from app.telegram.scrapper.channels import normalized_channels
 
 logger = get_app_logger(__name__)
@@ -30,6 +31,7 @@ class TelegramScraper:
         self._session_factory = session_factory
         self._extractor = extractor
         self._hash_locks: dict[str, asyncio.Lock] = {}
+        self._notification_service = NoopNotificationService()
 
     async def _message_handler(self, event: events.NewMessage.Event) -> None:
         try:
@@ -61,11 +63,29 @@ class TelegramScraper:
                 if not parse_result:
                     return
                 try:
-                    await v_service.save_vacancy(message_info, parse_result)
+                    vacancy_id = await v_service.save_vacancy(message_info, parse_result)
                     logger.info(
                         f"Vacancy saved (content_hash={content_hash}, "
                         f"chat_id={event.chat_id}, message_id={event.message.id})"
                     )
+                    try:
+                        matcher = MatcherService(
+                            MatchingUnitOfWork(self._session_factory),
+                            self._notification_service,
+                        )
+                        matched_user_ids = await matcher.match_vacancy(vacancy_id)
+                        logger.info(
+                            "Matching completed for vacancy %s: %s users ready for dispatch",
+                            vacancy_id.value,
+                            len(matched_user_ids),
+                        )
+                    except Exception:
+                        logger.exception(
+                            "Matching failed (vacancy_id=%s, chat_id=%s, message_id=%s)",
+                            vacancy_id.value,
+                            event.chat_id,
+                            event.message.id,
+                        )
                 except IntegrityError:
                     logger.info(
                         f"Duplicate vacancy skipped (content_hash={content_hash}, "

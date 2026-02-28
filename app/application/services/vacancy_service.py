@@ -26,7 +26,6 @@ class VacancyService:
             f"message_id={raw_vacancy_info.message_id})"
         )
         result = await self._extractor.parse_vacancy(text)
-        print(result)
         if not result.is_vacancy:
             logger.info("Message is not a vacancy")
             return None

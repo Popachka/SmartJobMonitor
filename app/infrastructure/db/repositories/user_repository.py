@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.user.entities import User
@@ -42,3 +43,25 @@ class UserRepository(IUserRepository):
             self._session.add(user_to_model(user))
             return
         apply_user(model, user)
+
+    async def find_prefiltered_candidates(
+        self,
+        specializations: set[str],
+        primary_languages: set[str],
+        is_active: bool = True,
+    ) -> list[User]:
+        query = select(UserModel)
+        query = query.where(UserModel.is_active.is_(is_active))
+
+        if specializations:
+            query = query.where(
+                UserModel.cv_specializations.bool_op("?|")(array(sorted(specializations)))
+            )
+        if primary_languages:
+            query = query.where(
+                UserModel.cv_primary_languages.bool_op("?|")(array(sorted(primary_languages)))
+            )
+
+        result = await self._session.execute(query)
+        models = result.scalars().all()
+        return [user_from_model(model) for model in models]

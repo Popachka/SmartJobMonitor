@@ -22,3 +22,8 @@ class VacancyUnitOfWork(UnitOfWork, Protocol):
 
 class UserUnitOfWork(UnitOfWork, Protocol):
     users: IUserRepository
+
+
+class MatchingUnitOfWork(UnitOfWork, Protocol):
+    users: IUserRepository
+    vacancies: IVacancyRepository
