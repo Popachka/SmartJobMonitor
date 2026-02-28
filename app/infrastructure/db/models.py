@@ -38,6 +38,30 @@ class Vacancy(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    tg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    username: Mapped[str | None] = mapped_column(String, nullable=True)
+    cv_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    cv_specializations: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    cv_primary_languages: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    cv_tech_stack: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+
+    cv_experience_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    filter_experience_mode: Mapped[str] = mapped_column(String, default="SOFT")
+
+    cv_salary_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cv_salary_currency: Mapped[str | None] = mapped_column(String, nullable=True)
+    filter_salary_mode: Mapped[str] = mapped_column(String, default="SOFT")
+
+    cv_work_format: Mapped[str | None] = mapped_column(String, nullable=True)
+    filter_work_format_mode: Mapped[str] = mapped_column(String, default="SOFT")
+
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 async def init_db() -> None:
     from app.infrastructure.db.session import engine
 

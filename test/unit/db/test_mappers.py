@@ -8,7 +8,11 @@ from app.domain.vacancy.value_objects import (
     VacancyId,
     WorkFormat,
 )
-from app.infrastructure.db.mappers import apply_vacancy, vacancy_from_model, vacancy_to_model
+from app.infrastructure.db.mappers.vacancy import (
+    apply_vacancy,
+    vacancy_from_model,
+    vacancy_to_model,
+)
 from app.infrastructure.db.models import Vacancy as VacancyModel
 
 

@@ -1,5 +1,6 @@
 from typing import Protocol
 
+from app.domain.user.repository import IUserRepository
 from app.domain.vacancy.repository import IVacancyRepository
 
 
@@ -17,3 +18,7 @@ class UnitOfWork(Protocol):
 
 class VacancyUnitOfWork(UnitOfWork, Protocol):
     vacancies: IVacancyRepository
+
+
+class UserUnitOfWork(UnitOfWork, Protocol):
+    users: IUserRepository

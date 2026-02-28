@@ -1,6 +1,7 @@
 import pytest
 
 from app.infrastructure.db.uow.base import SQLAlchemyUnitOfWork
+from app.infrastructure.db.uow.user_uow import UserUnitOfWork
 from app.infrastructure.db.uow.vacancy_uow import VacancyUnitOfWork
 
 
@@ -66,3 +67,14 @@ async def test_vacancy_uow_sets_repo() -> None:
         assert uow.vacancies is not None
 
     assert uow.vacancies is None
+
+
+@pytest.mark.asyncio
+async def test_user_uow_sets_repo() -> None:
+    session = FakeSession()
+    uow = UserUnitOfWork(FakeSessionFactory(session))
+
+    async with uow:
+        assert uow.users is not None
+
+    assert uow.users is None

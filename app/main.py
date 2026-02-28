@@ -9,6 +9,7 @@ from app.infrastructure.llm_provider import GoogleLLMExtractor
 from app.infrastructure.sentry import init_sentry
 from app.infrastructure.telegram.telethon_client import TelethonClientProvider
 from app.telegram.bot import get_router as get_bot_router
+from app.telegram.bot.middlewares import UserGuardMiddleware
 from app.telegram.scrapper.handlers import TelegramScraper
 
 
@@ -22,6 +23,7 @@ async def build_scraper() -> tuple[TelegramScraper, TelethonClientProvider]:
 def build_bot() -> tuple[Dispatcher, Bot]:
     bot = Bot(token=config.BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
+    dp.message.outer_middleware(UserGuardMiddleware(async_session_factory))
     dp.include_router(get_bot_router())
     return dp, bot
 
