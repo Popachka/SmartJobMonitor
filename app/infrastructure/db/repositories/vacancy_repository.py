@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.repository import IVacancyReader, IVacancyRepository
+from app.domain.vacancy.repository import IVacancyRepository
 from app.domain.vacancy.value_objects import ContentHash, VacancyId
 from app.infrastructure.db.mappers.vacancy import (
     apply_vacancy,
@@ -12,7 +12,7 @@ from app.infrastructure.db.mappers.vacancy import (
 from app.infrastructure.db.models import Vacancy as VacancyModel
 
 
-class VacancyRepository(IVacancyRepository, IVacancyReader):
+class VacancyRepository(IVacancyRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

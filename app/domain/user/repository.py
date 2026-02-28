@@ -5,13 +5,10 @@ from app.domain.user.value_objects import UserId
 
 
 @runtime_checkable
-class IUserReader(Protocol):
+class IUserRepository(Protocol):
     async def get_by_tg_id(self, tg_id: UserId) -> User | None:
         ...
 
-
-@runtime_checkable
-class IUserRepository(Protocol):
     async def add(self, user: User) -> None:
         ...
 

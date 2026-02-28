@@ -49,33 +49,25 @@ class VacancyService:
         if raw_vacancy_info.mirror_chat_id is None or raw_vacancy_info.mirror_message_id is None:
             raise ValueError("Mirror chat/message ids are required")
 
-        try:
-            vacancy = Vacancy.create(
-                vacancy_id=uuid4(),
-                text=text,
-                specializations_raw=[
-                    s.value for s in parse_result.specializations],
-                languages_raw=[
-                    l.value for l in parse_result.primary_languages],
-                tech_stack_raw=parse_result.tech_stack,
-                min_experience_months=parse_result.min_experience_months,
-                mirror_chat_id=raw_vacancy_info.mirror_chat_id,
-                mirror_message_id=raw_vacancy_info.mirror_message_id,
-                work_format=parse_result.work_format,
-                salary_amount=parse_result.salary.amount if parse_result.salary else None,
-                salary_currency=(
-                    parse_result.salary.currency.value
-                    if parse_result.salary and parse_result.salary.currency
-                    else None
-                ),
-            )
-        except ValidationError as exc:
-            logger.warning(
-                f"Vacancy rejected by domain validation (reason={exc}, "
-                f"chat_id={raw_vacancy_info.chat_id}, message_id={raw_vacancy_info.message_id})"
-            )
-            raise
-
+        vacancy = Vacancy.create(
+            vacancy_id=uuid4(),
+            text=text,
+            specializations_raw=[
+                s.value for s in parse_result.specializations],
+            languages_raw=[
+                l.value for l in parse_result.primary_languages],
+            tech_stack_raw=parse_result.tech_stack,
+            min_experience_months=parse_result.min_experience_months,
+            mirror_chat_id=raw_vacancy_info.mirror_chat_id,
+            mirror_message_id=raw_vacancy_info.mirror_message_id,
+            work_format=parse_result.work_format,
+            salary_amount=parse_result.salary.amount if parse_result.salary else None,
+            salary_currency=(
+                parse_result.salary.currency.value
+                if parse_result.salary and parse_result.salary.currency
+                else None
+            ),
+        )
         async with self._uow:
             await self._uow.vacancies.upsert(vacancy)
 
