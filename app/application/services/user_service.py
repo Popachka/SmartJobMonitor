@@ -15,6 +15,10 @@ class UserService:
     def __init__(self, uow: UserUnitOfWork) -> None:
         self._uow = uow
 
+    async def get_user_by_tg_id(self, tg_id: int) -> User | None:
+        async with self._uow:
+            return await self._uow.users.get_by_tg_id(UserId(tg_id))
+
     async def upsert_user(self, tg_id: int, username: str | None) -> User:
         user = User.create(tg_id=tg_id, username=username)
         async with self._uow:

@@ -13,6 +13,9 @@ EXPERIENCE_SOFT_TEXT = "Не учитывать"
 SALARY_STRICT_TEXT = "Начиная от зарплаты из резюме"
 SALARY_SOFT_TEXT = "Не учитывать"
 
+FORMAT_STRICT_TEXT = "Учитывать формат(Удаленка, Гибрид, Офис) из резюме"
+FORMAT_SOFT_TEXT = "Не учитывать"
+
 FORMAT_REMOTE_TEXT = "Удаленка"
 FORMAT_HYBRID_TEXT = "Гибрид"
 FORMAT_ONSITE_TEXT = "Офис"
@@ -59,10 +62,8 @@ def get_filter_salary_kb() -> ReplyKeyboardMarkup:
 
 def get_filter_format_kb() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    builder.button(text=FORMAT_REMOTE_TEXT)
-    builder.button(text=FORMAT_HYBRID_TEXT)
-    builder.button(text=FORMAT_ONSITE_TEXT)
-    builder.button(text=FORMAT_ANY_TEXT)
+    builder.button(text=FORMAT_STRICT_TEXT)
+    builder.button(text=FORMAT_SOFT_TEXT)
     builder.button(text=CANCEL_BUTTON_TEXT)
-    builder.adjust(2, 2, 1)
+    builder.adjust(2, 1)
     return builder.as_markup(resize_keyboard=True)
