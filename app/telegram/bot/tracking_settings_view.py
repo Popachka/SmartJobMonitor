@@ -102,8 +102,7 @@ def build_tracking_intro_and_available_steps(user: User) -> tuple[str, list[str]
     )
 
     available_steps: list[str] = []
-    if experience_text is not None:
-        available_steps.append(EXPERIENCE_STEP)
+    available_steps.append(EXPERIENCE_STEP)
     if salary_text is not None:
         available_steps.append(SALARY_STEP)
     if work_format_text is not None:

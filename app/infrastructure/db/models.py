@@ -50,7 +50,7 @@ class User(Base):
     cv_tech_stack: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     cv_experience_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    filter_experience_mode: Mapped[str] = mapped_column(String, default="SOFT")
+    filter_experience_min_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     cv_salary_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cv_salary_currency: Mapped[str | None] = mapped_column(String, nullable=True)

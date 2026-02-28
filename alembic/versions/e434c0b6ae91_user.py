@@ -5,17 +5,18 @@ Revises: cce3ae0cbc82
 Create Date: 2026-02-28 12:45:53.977665
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
 revision: str = 'e434c0b6ae91'
-down_revision: Union[str, Sequence[str], None] = 'cce3ae0cbc82'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = 'cce3ae0cbc82'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -29,7 +30,7 @@ def upgrade() -> None:
     sa.Column('cv_primary_languages', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('cv_tech_stack', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('cv_experience_months', sa.Integer(), nullable=True),
-    sa.Column('filter_experience_mode', sa.String(), nullable=False),
+    sa.Column('filter_experience_min_months', sa.Integer(), nullable=True),
     sa.Column('cv_salary_amount', sa.Integer(), nullable=True),
     sa.Column('cv_salary_currency', sa.String(), nullable=True),
     sa.Column('filter_salary_mode', sa.String(), nullable=False),

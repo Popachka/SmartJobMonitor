@@ -22,7 +22,7 @@ class User:
     cv_tech_stack: TechStack | None
 
     cv_experience_months: int | None
-    filter_experience_mode: FilterMode
+    filter_experience_min_months: int | None
 
     cv_salary: Salary | None
     filter_salary_mode: FilterMode
@@ -42,7 +42,7 @@ class User:
         cv_primary_languages_raw: list[str] | None = None,
         cv_tech_stack_raw: list[str] | None = None,
         cv_experience_months: int | None = None,
-        filter_experience_mode: FilterMode | str | None = None,
+        filter_experience_min_months: int | None = None,
         cv_salary_amount: int | None = None,
         cv_salary_currency: str | None = None,
         filter_salary_mode: FilterMode | str | None = None,
@@ -58,12 +58,10 @@ class User:
             if created_stack.items:
                 stack = created_stack
 
-        experience_mode = cls._normalize_mode(filter_experience_mode)
-        if cv_experience_months is None:
-            experience_mode = FilterMode.SOFT
-            experience_months = None
-        else:
-            experience_months = max(0, cv_experience_months)
+        experience_months = None if cv_experience_months is None else max(0, cv_experience_months)
+        experience_min_months = cls._normalize_experience_min_months(
+            filter_experience_min_months
+        )
         has_salary = cv_salary_amount is not None or bool(
             cv_salary_currency and cv_salary_currency.strip()
         )
@@ -85,7 +83,7 @@ class User:
             cv_primary_languages=langs,
             cv_tech_stack=stack,
             cv_experience_months=experience_months,
-            filter_experience_mode=experience_mode,
+            filter_experience_min_months=experience_min_months,
             cv_salary=salary,
             filter_salary_mode=salary_mode,
             cv_work_format=work_format,
@@ -117,4 +115,11 @@ class User:
             if not cleaned:
                 return None
             return WorkFormat(cleaned.upper())
+        return None
+
+    @staticmethod
+    def _normalize_experience_min_months(raw: int | None) -> int | None:
+        allowed = {12, 36, 60}
+        if raw in allowed:
+            return raw
         return None

@@ -8,8 +8,10 @@ from app.domain.user.value_objects import FilterMode
 from app.infrastructure.db import UserUnitOfWork, async_session_factory
 from app.telegram.bot.keyboards import (
     CANCEL_BUTTON_TEXT,
-    EXPERIENCE_SOFT_TEXT,
-    EXPERIENCE_STRICT_TEXT,
+    EXPERIENCE_FROM_1_TEXT,
+    EXPERIENCE_FROM_3_TEXT,
+    EXPERIENCE_FROM_5_TEXT,
+    EXPERIENCE_IGNORE_TEXT,
     FORMAT_ANY_TEXT,
     FORMAT_HYBRID_TEXT,
     FORMAT_ONSITE_TEXT,
@@ -35,11 +37,22 @@ from app.telegram.bot.tracking_settings_view import (
 
 router = Router()
 
-EXP_MODE_KEY = "exp_mode"
+EXP_MIN_MONTHS_KEY = "exp_min_months"
 SALARY_MODE_KEY = "salary_mode"
 FORMAT_MODE_KEY = "format_mode"
 AVAILABLE_STEPS_KEY = "available_steps"
 STEP_INDEX_KEY = "step_index"
+
+EXPERIENCE_TEXT_TO_MIN_MONTHS: dict[str, int | None] = {
+    EXPERIENCE_IGNORE_TEXT: None,
+    EXPERIENCE_FROM_1_TEXT: 12,
+    EXPERIENCE_FROM_3_TEXT: 36,
+    EXPERIENCE_FROM_5_TEXT: 60,
+}
+
+
+def _experience_min_months_from_text(text: str) -> int | None:
+    return EXPERIENCE_TEXT_TO_MIN_MONTHS.get(text)
 
 
 async def _ask_current_step(message: Message, state: FSMContext) -> bool:
@@ -89,7 +102,7 @@ async def _finalize_filters(
         return
 
     data = await state.get_data()
-    exp_mode = FilterMode(data.get(EXP_MODE_KEY, FilterMode.SOFT.value))
+    exp_min_months = data.get(EXP_MIN_MONTHS_KEY)
     salary_mode = FilterMode(data.get(SALARY_MODE_KEY, FilterMode.SOFT.value))
     format_mode = FilterMode(data.get(FORMAT_MODE_KEY, FilterMode.SOFT.value))
 
@@ -104,7 +117,9 @@ async def _finalize_filters(
 
     updated = await service.update_filters(
         tg_id=message.from_user.id,
-        experience_mode=exp_mode,
+        experience_min_months=(
+            exp_min_months if isinstance(exp_min_months, int) else None
+        ),
         salary_mode=salary_mode,
         work_format=user.cv_work_format,
         work_format_mode=format_mode,
@@ -167,7 +182,7 @@ async def start_filter_wizard(message: Message, state: FSMContext) -> None:
     if not available_steps:
         updated = await service.update_filters(
             tg_id=message.from_user.id,
-            experience_mode=FilterMode.SOFT,
+            experience_min_months=None,
             salary_mode=FilterMode.SOFT,
             work_format=user.cv_work_format,
             work_format_mode=FilterMode.SOFT,
@@ -191,7 +206,7 @@ async def start_filter_wizard(message: Message, state: FSMContext) -> None:
         {
             AVAILABLE_STEPS_KEY: available_steps,
             STEP_INDEX_KEY: 0,
-            EXP_MODE_KEY: FilterMode.SOFT.value,
+            EXP_MIN_MONTHS_KEY: None,
             SALARY_MODE_KEY: FilterMode.SOFT.value,
             FORMAT_MODE_KEY: FilterMode.SOFT.value,
         }
@@ -201,15 +216,18 @@ async def start_filter_wizard(message: Message, state: FSMContext) -> None:
 
 @router.message(
     StateFilter(BotStates.filter_experience),
-    F.text.in_({EXPERIENCE_STRICT_TEXT, EXPERIENCE_SOFT_TEXT}),
+    F.text.in_(
+        {
+            EXPERIENCE_IGNORE_TEXT,
+            EXPERIENCE_FROM_1_TEXT,
+            EXPERIENCE_FROM_3_TEXT,
+            EXPERIENCE_FROM_5_TEXT,
+        }
+    ),
 )
 async def filter_experience_step(message: Message, state: FSMContext) -> None:
-    mode = (
-        FilterMode.STRICT
-        if message.text == EXPERIENCE_STRICT_TEXT
-        else FilterMode.SOFT
-    )
-    await state.update_data({EXP_MODE_KEY: mode.value})
+    experience_min_months = _experience_min_months_from_text(message.text)
+    await state.update_data({EXP_MIN_MONTHS_KEY: experience_min_months})
     service = UserService(UserUnitOfWork(async_session_factory))
     await _advance_or_finalize(message, state, service)
 

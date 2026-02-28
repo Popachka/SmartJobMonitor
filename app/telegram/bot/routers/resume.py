@@ -10,13 +10,14 @@ from app.core.logger import get_app_logger
 from app.infrastructure.db import UserUnitOfWork, async_session_factory
 from app.infrastructure.parsers import (
     NotAResumeError,
-    ParserFactory,
     ParserError,
+    ParserFactory,
     TooManyPagesError,
 )
 from app.telegram.bot.keyboards import (
     CANCEL_BUTTON_TEXT,
     HELP_BUTTON_TEXT,
+    PROFILE_BUTTON_TEXT,
     TRACKING_BUTTON_TEXT,
     UPLOAD_BUTTON_TEXT,
     get_cancel_kb,
@@ -136,7 +137,9 @@ async def processing_resume_document_block(message: Message) -> None:
 
 @router.message(
     StateFilter(BotStates.main_menu, None),
-    ~F.text.in_({UPLOAD_BUTTON_TEXT, TRACKING_BUTTON_TEXT, HELP_BUTTON_TEXT}),
+    ~F.text.in_(
+        {UPLOAD_BUTTON_TEXT, TRACKING_BUTTON_TEXT, HELP_BUTTON_TEXT, PROFILE_BUTTON_TEXT}
+    ),
 )
 async def main_menu_fallback(message: Message) -> None:
     await message.answer(

@@ -28,7 +28,7 @@ class UserService:
     async def update_filters(
         self,
         tg_id: int,
-        experience_mode: FilterMode,
+        experience_min_months: int | None,
         salary_mode: FilterMode,
         work_format: WorkFormat | None,
         work_format_mode: FilterMode,
@@ -37,7 +37,7 @@ class UserService:
             user = await self._uow.users.get_by_tg_id(UserId(tg_id))
             if user is None:
                 return False
-            user.filter_experience_mode = experience_mode
+            user.filter_experience_min_months = experience_min_months
             user.filter_salary_mode = salary_mode
             user.cv_work_format = work_format
             user.filter_work_format_mode = work_format_mode
