@@ -4,7 +4,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel, Model
 from pydantic_ai.providers.google import GoogleProvider
 
-from app.application.dto.vacancy_dto import OutVacancyParse
+from app.application.dto import OutResumeParse, OutVacancyParse
 from app.application.ports.llm_port import ILLMExtractor
 from app.core.config import config
 
@@ -17,7 +17,7 @@ def get_google_model() -> Model:
 @lru_cache(maxsize=1)
 def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
     system_prompt = (
-         "Ты — строгий фильтр IT-вакансий. Ошибка — если принять не‑вакансию.\n\n"
+        "Ты — строгий фильтр IT-вакансий. Ошибка — если принять не‑вакансию.\n\n"
         "СНАЧАЛА реши is_vacancy.\n"
         "is_vacancy = false, если:\n"
         "- текст похож на списки технологий/стек без описания роли/задач/условий;\n"
@@ -46,6 +46,36 @@ def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
         model=get_google_model(),
         system_prompt=system_prompt,
         output_type=OutVacancyParse,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
+    system_prompt = (
+        "Ты — эксперт по анализу технических резюме. Твоя задача: перевести "
+        "неструктурированный текст в признаки.\n\n"
+        "ПРАВИЛА ИЗВЛЕЧЕНИЯ:\n"
+        "1. 'is_resume': true только для CV и профилей опыта.\n"
+        "2. 'specializations': выбери только из списка Literal.\n"
+        "3. 'primary_languages': выбери только из списка Literal.\n"
+        "4. 'experience_months': РАССЧИТАЙ общий коммерческий опыт.\n"
+        "   - Если указано '3 года', пиши 36.\n"
+        "   - Если указаны даты (н-р, октябрь 2022 - по н.в.), вычисли количество "
+        "полных месяцев.\n"
+        "   - Игнорируй пет-проекты.\n"
+        "5. 'tech_stack': извлеки фреймворки и БД (FastAPI, PostgreSQL). "
+        "Не дублируй языки.\n"
+        "6. 'salary': желаемая зарплата. Если указан диапазон — бери минимум. "
+        "Если зарплата не указана — верни null. Валюта может быть null.\n"
+        "7. 'work_format': выбирай одно из [REMOTE, HYBRID, ONSITE, UNDEFINED]. "
+        "Если нет явного указания — UNDEFINED.\n"
+        "8. 'full_relevant_text_from_resume': сохрани текст без изменений.\n"
+    )
+
+    return Agent[None, OutResumeParse](
+        model=get_google_model(),
+        system_prompt=system_prompt,
+        output_type=OutResumeParse,
     )
 
 

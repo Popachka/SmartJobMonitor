@@ -1,8 +1,19 @@
+from io import BytesIO
+
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from app.application.services.user_service import UserService
+from app.core.logger import get_app_logger
+from app.infrastructure.db import UserUnitOfWork, async_session_factory
+from app.infrastructure.parsers import (
+    NotAResumeError,
+    ParserFactory,
+    ParserError,
+    TooManyPagesError,
+)
 from app.telegram.bot.keyboards import (
     CANCEL_BUTTON_TEXT,
     HELP_BUTTON_TEXT,
@@ -14,6 +25,7 @@ from app.telegram.bot.keyboards import (
 from app.telegram.bot.states import BotStates
 
 router = Router()
+logger = get_app_logger(__name__)
 
 
 @router.message(StateFilter(BotStates.main_menu, None), F.text == UPLOAD_BUTTON_TEXT)
@@ -36,24 +48,72 @@ async def process_cancel(message: Message, state: FSMContext) -> None:
 
 @router.message(StateFilter(BotStates.waiting_resume), F.document)
 async def handle_resume_document(message: Message, state: FSMContext) -> None:
-    file_name = message.document.file_name or ""
-    if not file_name.lower().endswith(".pdf"):
-        await message.answer(
-            "Поддерживается только PDF. Отправьте PDF файл или нажмите «Отмена».",
-            reply_markup=get_cancel_kb(),
-        )
+    document = message.document
+    if document is None:
+        return
+    if document.file_size and document.file_size > 15 * 1024 * 1024:
+        await message.answer("Файл слишком большой. Максимум 15 МБ.")
         return
 
+    file_name = document.file_name or ""
+
     await state.set_state(BotStates.processing_resume)
+
+    async def reset_to_menu(err_msg: str) -> None:
+        await message.answer(f"⚠️ {err_msg}", reply_markup=get_main_menu_kb())
+        await state.set_state(BotStates.main_menu)
+
+    try:
+        parser = ParserFactory.get_parser_by_extension(file_name)
+    except ValueError:
+        await reset_to_menu("Формат не поддерживается.")
+        return
+
     processing_message = await message.answer(
-        "⏳ Резюме обрабатывается. Это займет немного времени."
+        "⏳ Резюме обрабатывается. Это может занять до пары минут.",
     )
-    await processing_message.edit_text("✅ Резюме обработалось.")
     await message.answer(
-        "✅ Резюме принято. Скоро начнем подбирать вакансии.",
+        "После анализа резюме вам начнут предлагаться подходящие вакансии по простым критериям:\n"
+        "1) Опыт — стаж близок к требованию вакансии.\n"
+        "2) Специализация (Backend, Frontend, Fullstack и т.д.).\n"
+        "3) Язык (Python, Java, C# и т.д.).\n"
+        "Даже если в резюме несколько языков и специализаций, бот это учтёт.",
         reply_markup=get_main_menu_kb(),
     )
-    await state.set_state(BotStates.main_menu)
+    user = message.from_user
+    if user is None:
+        await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
+        return
+
+    buffer = BytesIO()
+    try:
+        await message.bot.download(document.file_id, destination=buffer)
+        dto = await parser.extract_text(buffer)
+
+        service = UserService(UserUnitOfWork(async_session_factory))
+        updated = await service.update_resume(user.id, dto)
+        if not updated:
+            await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
+            return
+        try:
+            await processing_message.edit_text("✅ Резюме обработалось.")
+        except Exception as e:
+            logger.error(f"Failed to edit message: {e}")
+
+        await message.answer("Бот уже начал отслеживать для вас подходящие вакансии.")
+        await state.set_state(BotStates.main_menu)
+
+    except NotAResumeError:
+        await reset_to_menu("Этот файл не похож на резюме.")
+    except TooManyPagesError:
+        await reset_to_menu("Слишком много страниц (макс. 10).")
+    except ParserError:
+        await reset_to_menu("Не удалось обработать файл.")
+    except Exception:
+        logger.exception("Resume parsing failed")
+        await reset_to_menu("Произошла ошибка при анализе.")
+    finally:
+        buffer.close()
 
 
 @router.message(StateFilter(BotStates.waiting_resume))
