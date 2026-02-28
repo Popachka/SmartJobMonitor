@@ -1,13 +1,14 @@
 import io
 from datetime import datetime
 
-import fitz  
-from PIL import Image  
+import fitz
+from PIL import Image
 from pydantic_ai import BinaryContent
 
-from app.application.dto import OutResumeParse
+from app.application.dto import OutResumeParse, OutResumeSalaryParse
 from app.core.logger import get_app_logger
-from app.infrastructure.llm_provider import get_resume_parse_agent
+from app.domain.vacancy.value_objects import Salary
+from app.infrastructure.llm_provider import get_resume_parse_agent, get_resume_salary_agent
 from app.infrastructure.parsers.base import BaseResumeParser, ParserInput
 from app.infrastructure.parsers.exceptions import NotAResumeError, ParserError, TooManyPagesError
 
@@ -17,12 +18,13 @@ logger = get_app_logger(__name__)
 class PDFParser(BaseResumeParser):
     def __init__(self) -> None:
         self._agent = get_resume_parse_agent()
+        self._salary_agent = get_resume_salary_agent()
 
     async def extract_text(self, source: ParserInput) -> OutResumeParse:
         if not isinstance(source, io.BytesIO):
             raise ParserError(f"PDFParser ожидает BytesIO, получен {type(source)}")
         logger.info("Resume parsing started")
-        images = self._pdf_to_images(source)
+        images, pdf_text = self._pdf_to_images_and_text(source)
 
         if not images:
             raise ParserError("Не удалось получить изображения из PDF")
@@ -32,7 +34,7 @@ class PDFParser(BaseResumeParser):
 
         try:
             logger.info("Resume images ready: %d pages", len(images))
-            parsed_data = await self._run_agent(images)
+            parsed_data = await self._run_agent(images, pdf_text)
         finally:
             for img in images:
                 img.close()
@@ -42,12 +44,33 @@ class PDFParser(BaseResumeParser):
             logger.info("Resume parsing completed: not a resume")
             raise NotAResumeError("Этот документ не похож на резюме")
 
+        salary_source = "resume_pass" if parsed_data.salary is not None else "none"
+        salary_evidence: str | None = None
+        if parsed_data.salary is None and pdf_text.strip():
+            salary_source, salary_evidence = await self._try_fill_salary(parsed_data, pdf_text)
+
+        amount = parsed_data.salary.amount if parsed_data.salary else None
+        currency = (
+            parsed_data.salary.currency.value
+            if parsed_data.salary and parsed_data.salary.currency
+            else None
+        )
+        logger.info(
+            "Resume salary parsed: source=%s, amount=%s, currency=%s, evidence=%s",
+            salary_source,
+            amount,
+            currency,
+            self._truncate_text(salary_evidence),
+        )
         logger.info("Resume parsing completed: success")
         return parsed_data
 
-    def _pdf_to_images(self, source: io.BytesIO, dpi: int = 300) -> list[Image.Image]:
+    def _pdf_to_images_and_text(
+        self, source: io.BytesIO, dpi: int = 300
+    ) -> tuple[list[Image.Image], str]:
         source.seek(0)
         images: list[Image.Image] = []
+        text_parts: list[str] = []
 
         try:
             with fitz.open(stream=source.read(), filetype="pdf") as doc:
@@ -55,12 +78,13 @@ class PDFParser(BaseResumeParser):
                     img = self._render_page(page, dpi)
                     if img:
                         images.append(img)
+                    text_parts.append(page.get_text("text"))
         except (fitz.FileDataError, fitz.EmptyFileError) as exc:
             logger.error("Invalid PDF file: %s", exc)
         except Exception as exc:
             logger.error("Unexpected error during PDF rendering: %s", exc)
 
-        return images
+        return images, "\n".join(part for part in text_parts if part)
 
     def _render_page(self, page: fitz.Page, dpi: int) -> Image.Image | None:
         try:
@@ -73,11 +97,14 @@ class PDFParser(BaseResumeParser):
             logger.error("Error rendering page %d: %s", page.number, exc)
             return None
 
-    async def _run_agent(self, images: list[Image.Image]) -> OutResumeParse:
+    async def _run_agent(self, images: list[Image.Image], pdf_text: str) -> OutResumeParse:
         current_date = datetime.now().strftime("%B %Y")
         prompt_parts: list[str | BinaryContent] = [
             f"Текущая дата для расчётов: {current_date}\n"
-            "Пожалуйста, извлеките весь текст и проанализируйте следующие скриншоты резюме:"
+            "Пожалуйста, извлеките весь текст и проанализируйте следующие данные резюме.\n\n"
+            "Текстовый слой PDF (используй вместе со скриншотами):\n"
+            f"{pdf_text}\n\n"
+            "Скриншоты страниц резюме:"
         ]
         for idx, img in enumerate(images, start=1):
             image_to_use = img
@@ -106,3 +133,32 @@ class PDFParser(BaseResumeParser):
 
         result = await self._agent.run(user_prompt=prompt_parts)
         return result.output
+
+    async def _run_salary_agent(self, pdf_text: str) -> OutResumeSalaryParse:
+        result = await self._salary_agent.run(user_prompt=f"Текст резюме:\n{pdf_text}")
+        return result.output
+
+    async def _try_fill_salary(
+        self, parsed_data: OutResumeParse, pdf_text: str
+    ) -> tuple[str, str | None]:
+        try:
+            salary_result = await self._run_salary_agent(pdf_text)
+        except Exception:
+            logger.exception("Salary second pass failed")
+            return "none", None
+
+        if salary_result.amount is None:
+            return "none", salary_result.evidence
+
+        currency = salary_result.currency.value if salary_result.currency else None
+        parsed_data.salary = Salary.create(amount=salary_result.amount, currency=currency)
+        return "salary_pass", salary_result.evidence
+
+    @staticmethod
+    def _truncate_text(value: str | None, max_len: int = 140) -> str | None:
+        if value is None:
+            return None
+        cleaned = " ".join(value.split())
+        if len(cleaned) <= max_len:
+            return cleaned
+        return f"{cleaned[:max_len]}..."

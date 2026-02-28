@@ -4,7 +4,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel, Model
 from pydantic_ai.providers.google import GoogleProvider
 
-from app.application.dto import OutResumeParse, OutVacancyParse
+from app.application.dto import OutResumeParse, OutResumeSalaryParse, OutVacancyParse
 from app.application.ports.llm_port import ILLMExtractor
 from app.core.config import config
 
@@ -30,16 +30,20 @@ def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
         "Если сомневаешься — ставь false.\n"
         "Только IT-вакансии.\n\n"
         "Дальше извлекай поля...\n"
-        "2. 'specializations': выбери подходящие из списка. Если вакансия широкая (например, системный программист), выбери наиболее близкое.\n"
+        "2. 'specializations': выбери подходящие из списка. "
+        "Если вакансия широкая (например, системный программист), выбери наиболее близкое.\n"
         "3. 'min_experience_months':\n"
         "   - Если указано 'от X лет', умножай X на 12.\n"
         "   - Если указан диапазон '2-4 года', бери нижнюю границу (24).\n"
-        "   - Если годы не указаны, ориентируйся на грейд: Internship=0, Junior=12, Middle=36, Senior=60.\n"
-        "4. 'primary_languages': выбирай только из списка разрешенных (Literal). Если языка нет в списке — игнорируй.\n"
+        "   - Если годы не указаны, ориентируйся на грейд: "
+        "Internship=0, Junior=12, Middle=36, Senior=60.\n"
+        "4. 'primary_languages': выбирай только из списка разрешенных (Literal). "
+        "Если языка нет в списке — игнорируй.\n"
         "5. 'tech_stack': извлекай конкретные технологии (FastAPI, PostgreSQL и т.д.).\n"
         "6. 'salary': если указан диапазон (например, 15000-20000) — бери минимальную сумму. "
         "Если зарплата не указана — верни null. Валюту бери из описания, если не указана — null.\n"
-        "7. 'work_format': выбирай одно из [REMOTE, HYBRID, ONSITE, UNDEFINED]. Если нет явного указания — UNDEFINED."
+        "7. 'work_format': выбирай одно из [REMOTE, HYBRID, ONSITE, UNDEFINED]. "
+        "Если нет явного указания — UNDEFINED."
     )
 
     return Agent[None, OutVacancyParse](
@@ -67,6 +71,8 @@ def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
         "Не дублируй языки.\n"
         "6. 'salary': желаемая зарплата. Если указан диапазон — бери минимум. "
         "Если зарплата не указана — верни null. Валюта может быть null.\n"
+        "   - Пример: '150 000 ₽ на руки' => amount=150000, currency=RUB.\n"
+        "   - Не игнорируй зарплату, если числовая сумма указана отдельной строкой.\n"
         "7. 'work_format': выбирай одно из [REMOTE, HYBRID, ONSITE, UNDEFINED]. "
         "Если нет явного указания — UNDEFINED.\n"
         "8. 'full_relevant_text_from_resume': сохрани текст без изменений.\n"
@@ -76,6 +82,31 @@ def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
         model=get_google_model(),
         system_prompt=system_prompt,
         output_type=OutResumeParse,
+        model_settings={"temperature": 0.0},
+    )
+
+
+@lru_cache(maxsize=1)
+def get_resume_salary_agent() -> Agent[None, OutResumeSalaryParse]:
+    system_prompt = (
+        "Ты извлекаешь только зарплату из резюме.\n"
+        "Верни:\n"
+        "- amount: число или null;\n"
+        "- currency: RUB, USD, EUR или null;\n"
+        "- evidence: короткий фрагмент текста-основание.\n\n"
+        "Правила:\n"
+        "1. Извлекай только явную числовую зарплату.\n"
+        "2. Если диапазон — бери минимум.\n"
+        "3. Маркеры 'на руки' / 'до вычета' не меняют число.\n"
+        "4. Если суммы нет — amount=null, currency=null.\n"
+        "5. Ничего не придумывай."
+    )
+
+    return Agent[None, OutResumeSalaryParse](
+        model=get_google_model(),
+        system_prompt=system_prompt,
+        output_type=OutResumeSalaryParse,
+        model_settings={"temperature": 0.0},
     )
 
 

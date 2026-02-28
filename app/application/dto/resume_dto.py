@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 from app.domain.vacancy.value_objects import (
+    CurrencyType,
     LanguageType,
     Salary,
     SpecializationType,
@@ -47,4 +48,22 @@ class OutResumeParse(BaseModel):
     work_format: WorkFormat = Field(
         default=WorkFormat.UNDEFINED,
         description="Формат работы (REMOTE, HYBRID, ONSITE, UNDEFINED).",
+    )
+
+
+class OutResumeSalaryParse(BaseModel):
+    amount: int | None = Field(
+        default=None,
+        description=(
+            "Числовая сумма желаемой зарплаты. Если указан диапазон, возвращай минимум. "
+            "Если суммы нет, верни null."
+        ),
+    )
+    currency: CurrencyType | None = Field(
+        default=None,
+        description="Валюта зарплаты (RUB, USD, EUR) или null.",
+    )
+    evidence: str | None = Field(
+        default=None,
+        description="Короткий фрагмент текста, на основании которого извлечена зарплата.",
     )

@@ -1,4 +1,9 @@
-from .resume_dto import OutResumeParse
+from .resume_dto import OutResumeParse, OutResumeSalaryParse
 from .vacancy_dto import InfoRawVacancy, OutVacancyParse
 
-__all__ = ["OutVacancyParse", "InfoRawVacancy", "OutResumeParse"]
+__all__ = [
+    "OutVacancyParse",
+    "InfoRawVacancy",
+    "OutResumeParse",
+    "OutResumeSalaryParse",
+]
