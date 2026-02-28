@@ -10,6 +10,7 @@ from app.infrastructure.sentry import init_sentry
 from app.infrastructure.telegram.telethon_client import TelethonClientProvider
 from app.telegram.bot import get_router as get_bot_router
 from app.telegram.bot.middlewares import UserGuardMiddleware
+from app.telegram.bot.startup import setup_bot_commands
 from app.telegram.scrapper.handlers import TelegramScraper
 
 
@@ -25,6 +26,7 @@ def build_bot() -> tuple[Dispatcher, Bot]:
     dp = Dispatcher(storage=MemoryStorage())
     dp.message.outer_middleware(UserGuardMiddleware(async_session_factory))
     dp.include_router(get_bot_router())
+    dp.startup.register(setup_bot_commands)
     return dp, bot
 
 
@@ -32,6 +34,7 @@ async def main() -> None:
     init_sentry()
     scraper, provider = await build_scraper()
     dp, bot = build_bot()
+
     try:
         scraper_task = asyncio.create_task(scraper.start())
         bot_task = asyncio.create_task(dp.start_polling(bot))
