@@ -7,7 +7,7 @@ from pydantic_ai import BinaryContent
 
 from app.application.dto import OutResumeParse, OutResumeSalaryParse
 from app.core.logger import get_app_logger
-from app.domain.vacancy.value_objects import Salary
+from app.domain.shared.value_objects import Salary
 from app.infrastructure.llm_provider import get_resume_parse_agent, get_resume_salary_agent
 from app.infrastructure.parsers.base import BaseResumeParser, ParserInput
 from app.infrastructure.parsers.exceptions import NotAResumeError, ParserError, TooManyPagesError

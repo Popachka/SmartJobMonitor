@@ -1,8 +1,17 @@
 import hashlib
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from dataclasses import dataclass, field
-from app.domain.vacancy.value_objects import *
-from app.domain.vacancy.exceptions import *
+from uuid import UUID
+
+from app.domain.shared.value_objects import (
+    PrimaryLanguages,
+    Salary,
+    Specializations,
+    TechStack,
+    WorkFormat,
+)
+from app.domain.vacancy.exceptions import ValidationError
+from app.domain.vacancy.value_objects import ContentHash, VacancyId
 
 
 @dataclass(slots=True)

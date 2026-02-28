@@ -32,4 +32,4 @@ async def show_profile(message: Message) -> None:
         )
         return
 
-    await message.answer(build_search_profile_text(user))
+    await message.answer(build_search_profile_text(user), parse_mode="HTML")

@@ -1,22 +1,22 @@
 from app.domain.user.entities import User
+from app.domain.shared.value_objects import (
+    PrimaryLanguages as UserPrimaryLanguages,
+)
+from app.domain.shared.value_objects import (
+    Salary as UserSalary,
+)
+from app.domain.shared.value_objects import (
+    Specializations as UserSpecializations,
+)
+from app.domain.shared.value_objects import (
+    TechStack as UserTechStack,
+)
+from app.domain.shared.value_objects import (
+    WorkFormat as UserWorkFormat,
+)
 from app.domain.user.value_objects import (
     FilterMode,
     UserId,
-)
-from app.domain.user.value_objects import (
-    PrimaryLanguages as UserPrimaryLanguages,
-)
-from app.domain.user.value_objects import (
-    Salary as UserSalary,
-)
-from app.domain.user.value_objects import (
-    Specializations as UserSpecializations,
-)
-from app.domain.user.value_objects import (
-    TechStack as UserTechStack,
-)
-from app.domain.user.value_objects import (
-    WorkFormat as UserWorkFormat,
 )
 from app.infrastructure.db.models import User as UserModel
 

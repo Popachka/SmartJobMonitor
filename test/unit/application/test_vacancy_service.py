@@ -2,8 +2,9 @@ import pytest
 
 from app.application.dto import InfoRawVacancy, OutVacancyParse
 from app.application.services.vacancy_service import VacancyService
+from app.domain.shared.value_objects import LanguageType, Salary, SpecializationType, WorkFormat
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.value_objects import LanguageType, Salary, SpecializationType, VacancyId, WorkFormat
+from app.domain.vacancy.value_objects import VacancyId
 
 
 class FakeExtractor:

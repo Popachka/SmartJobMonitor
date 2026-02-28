@@ -4,12 +4,12 @@ import pytest
 from sqlalchemy import func, select
 
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.value_objects import (
-    ContentHash,
+from app.domain.shared.value_objects import (
     LanguageType,
     SpecializationType,
     WorkFormat,
 )
+from app.domain.vacancy.value_objects import ContentHash
 from app.infrastructure.db.models import Vacancy as VacancyModel
 from app.infrastructure.db.repositories.vacancy_repository import VacancyRepository
 

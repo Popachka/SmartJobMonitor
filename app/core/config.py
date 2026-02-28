@@ -1,3 +1,7 @@
+import json
+from pathlib import Path
+from typing import Any
+
 from pydantic import computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,7 +20,7 @@ class Settings(BaseSettings):
     TELETHON_LOGIN_MODE: str = "qr"
     TELEGRAM_2FA_PASSWORD: str | None = None
     BOT_TOKEN: str
-    CHANNELS: list[str]
+    CHANNELS_MAP_PATH: str = "channels_map.json"
     MIRROR_CHANNEL: int
 
     POSTGRES_SERVER: str
@@ -49,6 +53,52 @@ class Settings(BaseSettings):
                 path=self.POSTGRES_DB,
             )
         )
+
+    @property
+    def _channels_groups(self) -> dict[str, list[str]]:
+        path = Path(self.CHANNELS_MAP_PATH)
+        if not path.exists():
+            raise FileNotFoundError(f"Channels map file not found: {path}")
+
+        raw: Any = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError("Channels map must be a JSON object")
+
+        parsed: dict[str, list[str]] = {}
+        for group_name, channels in raw.items():
+            if not isinstance(group_name, str):
+                raise ValueError("Channels map keys must be strings")
+            if not isinstance(channels, list):
+                raise ValueError(f"Group '{group_name}' must contain a list of channels")
+
+            cleaned_channels: list[str] = []
+            for channel in channels:
+                if not isinstance(channel, str):
+                    raise ValueError(f"Channel in group '{group_name}' must be a string")
+                normalized = channel.strip()
+                if normalized:
+                    cleaned_channels.append(normalized)
+            parsed[group_name] = cleaned_channels
+
+        return parsed
+
+    @computed_field
+    @property
+    def CHANNELS_GROUPS(self) -> dict[str, list[str]]:
+        return self._channels_groups
+
+    @computed_field
+    @property
+    def CHANNELS(self) -> list[str]:
+        seen: set[str] = set()
+        flattened: list[str] = []
+        for channels in self._channels_groups.values():
+            for channel in channels:
+                if channel in seen:
+                    continue
+                seen.add(channel)
+                flattened.append(channel)
+        return flattened
 
 
 config = Settings()

@@ -1,11 +1,18 @@
-import pytest
-from uuid import uuid4
 from dataclasses import FrozenInstanceError
-from app.domain.vacancy.value_objects import (
-    Specializations, SpecializationType,
-    PrimaryLanguages, LanguageType,
-    Salary, TechStack, VacancyId, CurrencyType
+from uuid import uuid4
+
+import pytest
+
+from app.domain.shared.value_objects import (
+    CurrencyType,
+    LanguageType,
+    PrimaryLanguages,
+    Salary,
+    SpecializationType,
+    Specializations,
+    TechStack,
 )
+from app.domain.vacancy.value_objects import VacancyId
 
 
 def test_specializations_filtering():

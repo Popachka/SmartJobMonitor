@@ -1,4 +1,4 @@
-from app.domain.user.entities import User
+﻿from app.domain.user.entities import User
 from app.domain.user.value_objects import FilterMode
 from app.telegram.bot.tracking_settings_view import format_salary, format_work_format
 
@@ -18,9 +18,8 @@ def build_search_profile_text(user: User) -> str:
         "👤 Мой профиль поиска",
         "",
         "📍 Что мы ищем:",
-        _format_search_line("Направление(я)", specializations),
-        _format_search_line("Основной язык(и)", languages),
-        _format_search_line("Стек", stack),
+        _format_search_line("Направление(я)", specializations, bold_value=True),
+        _format_search_line("Основной язык(и)", languages, bold_value=True),
         "",
         "⚙️ Настройки фильтров:",
         f"• Опыт: {experience_text} ({experience_hint})",
@@ -55,12 +54,19 @@ def _format_mode_filter_line(
     return f"• {field_name}: {value} ({hint})"
 
 
-def _format_search_line(field_name: str, value: str | None, suffix_emoji: str = "") -> str:
+def _format_search_line(
+    field_name: str,
+    value: str | None,
+    suffix_emoji: str = "",
+    bold_value: bool = False,
+) -> str:
     if value is None:
         return f"• {field_name}: не найдено в резюме"
+
+    rendered_value = f"<b>{value}</b>" if bold_value else value
     if suffix_emoji:
-        return f"• {field_name}: {value} {suffix_emoji}"
-    return f"• {field_name}: {value}"
+        return f"• {field_name}: {rendered_value} {suffix_emoji}"
+    return f"• {field_name}: {rendered_value}"
 
 
 def _format_experience_filter(filter_min_months: int | None) -> tuple[str, str]:

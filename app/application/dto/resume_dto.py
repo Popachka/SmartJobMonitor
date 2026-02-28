@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.domain.vacancy.value_objects import (
+from app.domain.shared.value_objects import (
     CurrencyType,
     LanguageType,
     Salary,

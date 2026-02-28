@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 
-from app.domain.user.value_objects import (
-    FilterMode,
+from app.domain.shared.value_objects import (
     PrimaryLanguages,
     Salary,
     Specializations,
     TechStack,
-    UserId,
     WorkFormat,
 )
+from app.domain.user.value_objects import FilterMode, UserId
 
 
 @dataclass(slots=True)

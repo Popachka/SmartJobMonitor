@@ -1,9 +1,10 @@
-# tests/domain/vacancy/test_vacancy_entity.py
-import pytest
 from uuid import uuid4
+
+import pytest
+
+from app.domain.shared.value_objects import LanguageType, SpecializationType, WorkFormat
 from app.domain.vacancy.entities import Vacancy
 from app.domain.vacancy.exceptions import ValidationError
-from app.domain.vacancy.value_objects import WorkFormat, SpecializationType, LanguageType
 
 
 @pytest.fixture

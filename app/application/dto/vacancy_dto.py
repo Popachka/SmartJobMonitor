@@ -1,4 +1,4 @@
-from app.domain.vacancy.value_objects import LanguageType, Salary, SpecializationType, WorkFormat
+from app.domain.shared.value_objects import LanguageType, Salary, SpecializationType, WorkFormat
 
 from pydantic import BaseModel, Field
 

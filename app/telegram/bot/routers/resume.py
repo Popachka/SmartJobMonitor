@@ -1,4 +1,4 @@
-from io import BytesIO
+﻿from io import BytesIO
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -33,7 +33,8 @@ logger = get_app_logger(__name__)
 async def process_upload_button(message: Message, state: FSMContext) -> None:
     await state.set_state(BotStates.waiting_resume)
     await message.answer(
-        "Отправь резюме в формате PDF.",
+        "Пришли, пожалуйста, своё резюме файлом в формате PDF. 📄\n"
+        "Я сразу приступлю к его изучению.",
         reply_markup=get_cancel_kb(),
     )
 
@@ -42,7 +43,7 @@ async def process_upload_button(message: Message, state: FSMContext) -> None:
 async def process_cancel(message: Message, state: FSMContext) -> None:
     await state.set_state(BotStates.main_menu)
     await message.answer(
-        "Оставляем как есть.",
+        "Понял, отменяем. Твои текущие настройки остались без изменений. ↩️",
         reply_markup=get_main_menu_kb(),
     )
 
@@ -71,14 +72,14 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
         return
 
     processing_message = await message.answer(
-        "⏳ Резюме обрабатывается. Это может занять до пары минут.",
+        "⏳ Резюме в обработке. Обычно это занимает 1–2 минуты.",
     )
     await message.answer(
-        "После анализа резюме вам начнут предлагаться подходящие вакансии по простым критериям:\n"
-        "1) Опыт — стаж близок к требованию вакансии.\n"
-        "2) Специализация (Backend, Frontend, Fullstack и т.д.).\n"
-        "3) Язык (Python, Java, C# и т.д.).\n"
-        "Даже если в резюме несколько языков и специализаций, бот это учтёт.",
+        "Что я учитываю при подборе: 🎯\n"
+        "• Специализацию (Backend, Frontend, Fullstack и др.)\n"
+        "• Основные языки (Python, Java, C# и др.)\n"
+        "• Доп. фильтры из настроек: опыт, зарплата, формат\n\n"
+        "Если в резюме указано несколько направлений или языков, я учту все.",
         reply_markup=get_main_menu_kb(),
     )
     user = message.from_user
@@ -101,7 +102,7 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
         except Exception as e:
             logger.error(f"Failed to edit message: {e}")
 
-        await message.answer("Бот уже начал отслеживать для вас подходящие вакансии.")
+        await message.answer("Отслеживание включено: теперь я буду присылать подходящие вакансии. 🔎")
         await state.set_state(BotStates.main_menu)
 
     except NotAResumeError:
@@ -120,19 +121,21 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
 @router.message(StateFilter(BotStates.waiting_resume))
 async def waiting_resume_fallback(message: Message) -> None:
     await message.answer(
-        "Пришлите PDF файл резюме или нажмите «Отмена».",
+        "Чтобы продолжить, мне нужен твой PDF-файл. 📄\n"
+        "Текст или фото я прочитать не смогу.\n\n"
+        "Жду резюме или нажми «Отмена», чтобы вернуться в меню.",
         reply_markup=get_cancel_kb(),
     )
 
 
 @router.message(StateFilter(BotStates.processing_resume), F.text == UPLOAD_BUTTON_TEXT)
 async def processing_resume_block(message: Message) -> None:
-    await message.answer("Ваше резюме уже обрабатывается, подождите.")
+    await message.answer("Резюме уже в обработке. Обычно это занимает 1–2 минуты.")
 
 
 @router.message(StateFilter(BotStates.processing_resume), F.document)
 async def processing_resume_document_block(message: Message) -> None:
-    await message.answer("Ваше резюме уже обрабатывается, подождите.")
+    await message.answer("Резюме уже в обработке. Обычно это занимает 1–2 минуты.")
 
 
 @router.message(

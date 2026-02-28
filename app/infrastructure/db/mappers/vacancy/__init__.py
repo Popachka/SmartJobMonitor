@@ -1,13 +1,12 @@
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.value_objects import (
-    ContentHash,
+from app.domain.shared.value_objects import (
     PrimaryLanguages,
     Salary,
     Specializations,
     TechStack,
-    VacancyId,
     WorkFormat,
 )
+from app.domain.vacancy.value_objects import ContentHash, VacancyId
 from app.infrastructure.db.models import Vacancy as VacancyModel
 
 

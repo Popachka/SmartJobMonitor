@@ -1,13 +1,15 @@
 from app.application.dto import OutResumeParse
 from app.application.ports.unit_of_work import UserUnitOfWork
 from app.domain.user.entities import User
-from app.domain.user.value_objects import (
-    FilterMode,
+from app.domain.shared.value_objects import (
     PrimaryLanguages,
     Specializations,
     TechStack,
-    UserId,
     WorkFormat,
+)
+from app.domain.user.value_objects import (
+    FilterMode,
+    UserId,
 )
 
 
