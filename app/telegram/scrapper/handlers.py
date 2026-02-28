@@ -1,5 +1,6 @@
 import asyncio
 
+from aiogram import Bot
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from telethon import TelegramClient, events
@@ -14,7 +15,7 @@ from app.core.logger import get_app_logger
 from app.domain.vacancy.entities import Vacancy
 from app.domain.vacancy.value_objects import ContentHash
 from app.infrastructure.db import MatchingUnitOfWork, VacancyUnitOfWork
-from app.infrastructure.notifications import NoopNotificationService
+from app.infrastructure.notifications import TelegramNotificationService
 from app.telegram.scrapper.channels import normalized_channels
 
 logger = get_app_logger(__name__)
@@ -24,6 +25,7 @@ class TelegramScraper:
     def __init__(
         self,
         client: TelegramClient,
+        bot: Bot,
         session_factory: async_sessionmaker[AsyncSession],
         extractor: ILLMExtractor,
     ):
@@ -31,7 +33,7 @@ class TelegramScraper:
         self._session_factory = session_factory
         self._extractor = extractor
         self._hash_locks: dict[str, asyncio.Lock] = {}
-        self._notification_service = NoopNotificationService()
+        self._notification_service = TelegramNotificationService(bot)
 
     async def _message_handler(self, event: events.NewMessage.Event) -> None:
         try:

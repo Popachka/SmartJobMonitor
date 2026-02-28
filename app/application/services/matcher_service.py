@@ -53,6 +53,8 @@ class MatcherService:
 
         await self._notification_service.dispatch_vacancy(
             vacancy_id=vacancy_id.value,
+            mirror_chat_id=vacancy.mirror_chat_id,
+            mirror_message_id=vacancy.mirror_message_id,
             user_ids=[user_id.value for user_id in matched_user_ids],
         )
 

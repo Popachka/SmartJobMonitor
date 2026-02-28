@@ -14,11 +14,11 @@ from app.telegram.bot.startup import setup_bot_commands
 from app.telegram.scrapper.handlers import TelegramScraper
 
 
-async def build_scraper() -> tuple[TelegramScraper, TelethonClientProvider]:
+async def build_scraper(bot: Bot) -> tuple[TelegramScraper, TelethonClientProvider]:
     provider = TelethonClientProvider()
     client = await provider.start()
     extractor = GoogleLLMExtractor()
-    return TelegramScraper(client, async_session_factory, extractor), provider
+    return TelegramScraper(client, bot, async_session_factory, extractor), provider
 
 
 def build_bot() -> tuple[Dispatcher, Bot]:
@@ -32,8 +32,8 @@ def build_bot() -> tuple[Dispatcher, Bot]:
 
 async def main() -> None:
     init_sentry()
-    scraper, provider = await build_scraper()
     dp, bot = build_bot()
+    scraper, provider = await build_scraper(bot)
 
     try:
         scraper_task = asyncio.create_task(scraper.start())
