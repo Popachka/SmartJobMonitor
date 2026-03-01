@@ -66,7 +66,7 @@ class PDFParser(BaseResumeParser):
         return parsed_data
 
     def _pdf_to_images_and_text(
-        self, source: io.BytesIO, dpi: int = 300
+        self, source: io.BytesIO, dpi: int = 150
     ) -> tuple[list[Image.Image], str]:
         source.seek(0)
         images: list[Image.Image] = []
