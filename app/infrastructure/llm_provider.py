@@ -4,7 +4,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel, Model
 from pydantic_ai.providers.google import GoogleProvider
 
-from app.application.dto import OutResumeParse, OutResumeSalaryParse, OutVacancyParse
+from app.application.dto import OutResumeParse, OutVacancyParse
 from app.application.ports.llm_port import ILLMExtractor
 from app.core.config import config
 
@@ -50,6 +50,8 @@ def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
         model=get_google_model(),
         system_prompt=system_prompt,
         output_type=OutVacancyParse,
+        name="vacancy_parser_agent",
+        metadata={"agent_type": "vacancy_parser"},
     )
 
 
@@ -83,11 +85,18 @@ def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
         system_prompt=system_prompt,
         output_type=OutResumeParse,
         model_settings={"temperature": 0.0},
+        name="resume_parser_agent",
+        metadata={"agent_type": "resume_parser"},
     )
+
+
 class GoogleLLMExtractor(ILLMExtractor):
     def __init__(self) -> None:
         self._agent = get_vacancy_parse_agent()
 
     async def parse_vacancy(self, text: str) -> OutVacancyParse:
-        result = await self._agent.run(user_prompt=f"Текст вакансии:\n{text}")
+        result = await self._agent.run(
+            user_prompt=f"Текст вакансии:\n{text}",
+            metadata={"pipeline": "vacancy_ingest"},
+        )
         return result.output

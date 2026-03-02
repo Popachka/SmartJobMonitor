@@ -111,5 +111,8 @@ class PDFParser(BaseResumeParser):
             if image_to_use is not img:
                 image_to_use.close()
 
-        result = await self._agent.run(user_prompt=prompt_parts)
+        result = await self._agent.run(
+            user_prompt=prompt_parts,
+            metadata={"pipeline": "resume_parse"},
+        )
         return result.output

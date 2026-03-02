@@ -30,6 +30,7 @@ dependencies = [
     "pydantic-ai>=1.63.0",
     "pydantic-settings>=2.13.1",
     "qrcode>=8.2",
+    "logfire>=4.25.0",
     "sentry-sdk>=2.53.0",
     "sqlalchemy>=2.0.47",
     "telethon>=1.42.0",

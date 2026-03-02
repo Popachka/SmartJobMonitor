@@ -3,9 +3,12 @@ PYTHON_MAIN = app.main
 PROJECT_DIR = app
 TEST_DIR = test
 VENV_DIR = .venv
+LOGFIRE_PROJECT = jobmonitor
 
 .PHONY: help venv install run lint format test test-unit test-integration clean \
-	docker-build docker-up docker-down docker-logs obs-up obs-down obs-logs
+	docker-build docker-up docker-down docker-logs \
+	obs-up obs-down obs-logs \
+	logfire-auth logfire-use-project
 
 default: help
 
@@ -27,6 +30,8 @@ help:
 	@echo "  obs-up            - Launch observability stack"
 	@echo "  obs-down          - Stop observability stack"
 	@echo "  obs-logs          - View observability logs (SERVICE=...)"
+	@echo "  logfire-auth      - Authenticate Logfire locally"
+	@echo "  logfire-use-project - Select Logfire project ($(LOGFIRE_PROJECT))"
 
 venv:
 	uv venv $(VENV_DIR)
@@ -81,3 +86,9 @@ obs-down:
 
 obs-logs:
 	docker compose -f docker-compose.observability.yml logs -f $(SERVICE)
+
+logfire-auth:
+	uv run logfire auth
+
+logfire-use-project:
+	uv run logfire projects use $(LOGFIRE_PROJECT)

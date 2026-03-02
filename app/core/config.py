@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     SENTRY_ENV: str = "development"
     SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
+    LOGFIRE_ENABLED: bool = True
+    LOGFIRE_TOKEN: str | None = None
+    LOGFIRE_SERVICE_NAME: str
+    LOGFIRE_ENV: str = "development"
+
     METRICS_ENABLED: bool = True
     METRICS_ADDR: str = "0.0.0.0"
     METRICS_PORT: int = 8000

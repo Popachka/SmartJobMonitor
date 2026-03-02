@@ -8,6 +8,7 @@ from app.infrastructure.db import async_session_factory
 from app.infrastructure.llm_provider import GoogleLLMExtractor
 from app.infrastructure.observability import (
     build_observability_service,
+    init_logfire,
     init_metrics_server,
 )
 from app.infrastructure.sentry import init_sentry
@@ -37,6 +38,7 @@ def build_bot() -> tuple[Dispatcher, Bot]:
 
 async def main() -> None:
     init_sentry()
+    init_logfire()
     init_metrics_server()
     dp, bot = build_bot()
     scraper, provider = await build_scraper(bot)
