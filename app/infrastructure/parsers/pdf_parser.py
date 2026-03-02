@@ -5,10 +5,9 @@ import fitz
 from PIL import Image
 from pydantic_ai import BinaryContent
 
-from app.application.dto import OutResumeParse, OutResumeSalaryParse
+from app.application.dto import OutResumeParse
 from app.core.logger import get_app_logger
-from app.domain.shared.value_objects import Salary
-from app.infrastructure.llm_provider import get_resume_parse_agent, get_resume_salary_agent
+from app.infrastructure.llm_provider import get_resume_parse_agent
 from app.infrastructure.parsers.base import BaseResumeParser, ParserInput
 from app.infrastructure.parsers.exceptions import NotAResumeError, ParserError, TooManyPagesError
 
@@ -18,7 +17,6 @@ logger = get_app_logger(__name__)
 class PDFParser(BaseResumeParser):
     def __init__(self) -> None:
         self._agent = get_resume_parse_agent()
-        self._salary_agent = get_resume_salary_agent()
 
     async def extract_text(self, source: ParserInput) -> OutResumeParse:
         if not isinstance(source, io.BytesIO):
@@ -44,24 +42,6 @@ class PDFParser(BaseResumeParser):
             logger.info("Resume parsing completed: not a resume")
             raise NotAResumeError("Этот документ не похож на резюме")
 
-        salary_source = "resume_pass" if parsed_data.salary is not None else "none"
-        salary_evidence: str | None = None
-        if parsed_data.salary is None and pdf_text.strip():
-            salary_source, salary_evidence = await self._try_fill_salary(parsed_data, pdf_text)
-
-        amount = parsed_data.salary.amount if parsed_data.salary else None
-        currency = (
-            parsed_data.salary.currency.value
-            if parsed_data.salary and parsed_data.salary.currency
-            else None
-        )
-        logger.info(
-            "Resume salary parsed: source=%s, amount=%s, currency=%s, evidence=%s",
-            salary_source,
-            amount,
-            currency,
-            self._truncate_text(salary_evidence),
-        )
         logger.info("Resume parsing completed: success")
         return parsed_data
 
@@ -133,32 +113,3 @@ class PDFParser(BaseResumeParser):
 
         result = await self._agent.run(user_prompt=prompt_parts)
         return result.output
-
-    async def _run_salary_agent(self, pdf_text: str) -> OutResumeSalaryParse:
-        result = await self._salary_agent.run(user_prompt=f"Текст резюме:\n{pdf_text}")
-        return result.output
-
-    async def _try_fill_salary(
-        self, parsed_data: OutResumeParse, pdf_text: str
-    ) -> tuple[str, str | None]:
-        try:
-            salary_result = await self._run_salary_agent(pdf_text)
-        except Exception:
-            logger.exception("Salary second pass failed")
-            return "none", None
-
-        if salary_result.amount is None:
-            return "none", salary_result.evidence
-
-        currency = salary_result.currency.value if salary_result.currency else None
-        parsed_data.salary = Salary.create(amount=salary_result.amount, currency=currency)
-        return "salary_pass", salary_result.evidence
-
-    @staticmethod
-    def _truncate_text(value: str | None, max_len: int = 140) -> str | None:
-        if value is None:
-            return None
-        cleaned = " ".join(value.split())
-        if len(cleaned) <= max_len:
-            return cleaned
-        return f"{cleaned[:max_len]}..."

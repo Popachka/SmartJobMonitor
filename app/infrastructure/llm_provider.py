@@ -84,32 +84,6 @@ def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
         output_type=OutResumeParse,
         model_settings={"temperature": 0.0},
     )
-
-
-@lru_cache(maxsize=1)
-def get_resume_salary_agent() -> Agent[None, OutResumeSalaryParse]:
-    system_prompt = (
-        "Ты извлекаешь только зарплату из резюме.\n"
-        "Верни:\n"
-        "- amount: число или null;\n"
-        "- currency: RUB, USD, EUR или null;\n"
-        "- evidence: короткий фрагмент текста-основание.\n\n"
-        "Правила:\n"
-        "1. Извлекай только явную числовую зарплату.\n"
-        "2. Если диапазон — бери минимум.\n"
-        "3. Маркеры 'на руки' / 'до вычета' не меняют число.\n"
-        "4. Если суммы нет — amount=null, currency=null.\n"
-        "5. Ничего не придумывай."
-    )
-
-    return Agent[None, OutResumeSalaryParse](
-        model=get_google_model(),
-        system_prompt=system_prompt,
-        output_type=OutResumeSalaryParse,
-        model_settings={"temperature": 0.0},
-    )
-
-
 class GoogleLLMExtractor(ILLMExtractor):
     def __init__(self) -> None:
         self._agent = get_vacancy_parse_agent()

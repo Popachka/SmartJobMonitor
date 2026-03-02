@@ -6,6 +6,7 @@ from telethon.tl.custom.message import Message
 
 from app.application.dto import InfoRawVacancy
 from app.application.ports.llm_port import ILLMExtractor
+from app.application.ports.observability_port import IObservabilityService
 from app.application.services.matcher_service import MatcherService
 from app.application.services.vacancy_service import VacancyService
 from app.core.config import config
@@ -26,10 +27,12 @@ class TelegramScraper:
         bot: Bot,
         session_factory: async_sessionmaker[AsyncSession],
         extractor: ILLMExtractor,
-    ):
+        observability: IObservabilityService,
+    ) -> None:
         self.client = client
         self._session_factory = session_factory
         self._extractor = extractor
+        self._observability = observability
         self._notification_service = TelegramNotificationService(bot)
 
     async def _message_handler(self, event: events.NewMessage.Event) -> None:
@@ -55,7 +58,7 @@ class TelegramScraper:
                 return
 
             uow = VacancyUnitOfWork(self._session_factory)
-            v_service = VacancyService(uow, self._extractor)
+            v_service = VacancyService(uow, self._extractor, self._observability)
             parse_result = await v_service.parse_message(message_info)
             if not parse_result:
                 return

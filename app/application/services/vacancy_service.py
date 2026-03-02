@@ -1,7 +1,8 @@
 from uuid import uuid4
 
-from app.application.dto import OutVacancyParse, InfoRawVacancy
+from app.application.dto import InfoRawVacancy, OutVacancyParse
 from app.application.ports.llm_port import ILLMExtractor
+from app.application.ports.observability_port import IObservabilityService
 from app.application.ports.unit_of_work import VacancyUnitOfWork
 from app.core.logger import get_app_logger
 from app.domain.vacancy.entities import Vacancy
@@ -11,9 +12,15 @@ logger = get_app_logger(__name__)
 
 
 class VacancyService:
-    def __init__(self, uow: VacancyUnitOfWork, extractor: ILLMExtractor) -> None:
+    def __init__(
+        self,
+        uow: VacancyUnitOfWork,
+        extractor: ILLMExtractor,
+        observability: IObservabilityService,
+    ) -> None:
         self._uow = uow
         self._extractor = extractor
+        self._observability = observability
 
     async def parse_message(self, raw_vacancy_info: InfoRawVacancy) -> OutVacancyParse | None:
         text = raw_vacancy_info.text.strip()
@@ -31,7 +38,7 @@ class VacancyService:
 
         logger.info(
             f"LLM parsed vacancy (specializations={[s.value for s in result.specializations]}, "
-            f"languages={[l.value for l in result.primary_languages]}, "
+            f"languages={[language.value for language in result.primary_languages]}, "
             f"tech_stack={result.tech_stack}, min_exp_months={result.min_experience_months})"
         )
         return result
@@ -53,7 +60,7 @@ class VacancyService:
             specializations_raw=[
                 s.value for s in parse_result.specializations],
             languages_raw=[
-                l.value for l in parse_result.primary_languages],
+                language.value for language in parse_result.primary_languages],
             tech_stack_raw=parse_result.tech_stack,
             min_experience_months=parse_result.min_experience_months,
             mirror_chat_id=raw_vacancy_info.mirror_chat_id,
@@ -68,5 +75,6 @@ class VacancyService:
         )
         async with self._uow:
             await self._uow.vacancies.upsert(vacancy)
+        self._observability.observe_vacancy_collected(1)
 
         return vacancy.id
