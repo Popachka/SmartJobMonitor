@@ -1,6 +1,6 @@
-from app.domain.shared.value_objects import LanguageType, Salary, SpecializationType, WorkFormat
-
 from pydantic import BaseModel, Field
+
+from app.domain.shared.value_objects import LanguageType, Salary, SpecializationType, WorkFormat
 
 
 class InfoRawVacancy(BaseModel):

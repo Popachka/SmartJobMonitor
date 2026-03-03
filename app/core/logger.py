@@ -1,5 +1,4 @@
 import logging
-from typing import TypeVar, ParamSpec
 
 
 def setup_root_logger():

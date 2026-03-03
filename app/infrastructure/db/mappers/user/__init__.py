@@ -1,4 +1,3 @@
-from app.domain.user.entities import User
 from app.domain.shared.value_objects import (
     PrimaryLanguages as UserPrimaryLanguages,
 )
@@ -14,6 +13,7 @@ from app.domain.shared.value_objects import (
 from app.domain.shared.value_objects import (
     WorkFormat as UserWorkFormat,
 )
+from app.domain.user.entities import User
 from app.domain.user.value_objects import (
     FilterMode,
     UserId,

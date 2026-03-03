@@ -1,4 +1,3 @@
-from app.domain.vacancy.entities import Vacancy
 from app.domain.shared.value_objects import (
     PrimaryLanguages,
     Salary,
@@ -6,6 +5,7 @@ from app.domain.shared.value_objects import (
     TechStack,
     WorkFormat,
 )
+from app.domain.vacancy.entities import Vacancy
 from app.domain.vacancy.value_objects import ContentHash, VacancyId
 from app.infrastructure.db.models import Vacancy as VacancyModel
 
@@ -15,7 +15,7 @@ def vacancy_to_model(vacancy: Vacancy) -> VacancyModel:
         id=vacancy.id.value,
         text=vacancy.text,
         specializations=[s.value for s in vacancy.specializations.items],
-        primary_languages=[l.value for l in vacancy.primary_languages.items],
+        primary_languages=[lang.value for lang in vacancy.primary_languages.items],
         tech_stack=list(vacancy.tech_stack.items),
         min_experience_months=vacancy.min_experience_months,
         mirror_chat_id=vacancy.mirror_chat_id,
@@ -32,7 +32,7 @@ def vacancy_to_model(vacancy: Vacancy) -> VacancyModel:
 def apply_vacancy(model: VacancyModel, vacancy: Vacancy) -> None:
     model.text = vacancy.text
     model.specializations = [s.value for s in vacancy.specializations.items]
-    model.primary_languages = [l.value for l in vacancy.primary_languages.items]
+    model.primary_languages = [lang.value for lang in vacancy.primary_languages.items]
     model.tech_stack = list(vacancy.tech_stack.items)
     model.min_experience_months = vacancy.min_experience_months
     model.mirror_chat_id = vacancy.mirror_chat_id

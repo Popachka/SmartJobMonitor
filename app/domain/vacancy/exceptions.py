@@ -1,5 +1,6 @@
 from app.domain.shared.domain_errors import DomainError
 
+
 class VacancyDomainError(DomainError):
     pass
 

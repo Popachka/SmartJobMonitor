@@ -1,7 +1,7 @@
 from typing import Protocol, runtime_checkable
 
 from app.domain.vacancy.entities import Vacancy
-from app.domain.vacancy.value_objects import VacancyId, ContentHash
+from app.domain.vacancy.value_objects import ContentHash, VacancyId
 
 
 @runtime_checkable

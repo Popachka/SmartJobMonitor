@@ -1,6 +1,6 @@
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from app.domain.shared.value_objects import (
@@ -69,7 +69,7 @@ class Vacancy:
         salary_vo = Salary.create(
             amount=salary_amount, currency=salary_currency)
         
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         
         return cls(
             id=VacancyId(vacancy_id),
