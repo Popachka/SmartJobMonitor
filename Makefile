@@ -7,11 +7,13 @@ LOGFIRE_PROJECT = jobmonitor
 DEV_COMPOSE = docker-compose -f docker-compose.yml -f docker-compose.override.yml
 PROD_COMPOSE = docker-compose -f docker-compose.yml
 OBS_COMPOSE = docker-compose -f docker-compose.observability.yml
+BACKUP_DIR ?= /opt/backups
 
 .PHONY: help venv install run lint format test test-unit test-integration clean \
 	docker-build \
 	dev-up dev-down dev-destroy dev-logs dev-ps dev-restart \
 	prod-up prod-down prod-destroy prod-logs prod-ps prod-restart prod-migrate \
+	prod-db-up prod-app-up prod-backup prod-deploy \
 	obs-up obs-down obs-destroy obs-logs obs-ps \
 	dev-up-all dev-down-all dev-destroy-all \
 	prod-up-all prod-down-all prod-destroy-all \
@@ -47,6 +49,10 @@ help:
 	@echo "  prod-logs         - Follow prod logs (use SERVICE=app|db)"
 	@echo "  prod-restart      - Restart prod stack"
 	@echo "  prod-migrate      - Run Alembic migrations in prod stack"
+	@echo "  prod-db-up        - Start only postgres in prod stack"
+	@echo "  prod-app-up       - Start only app in prod stack"
+	@echo "  prod-backup       - Dump prod postgres to $(BACKUP_DIR)"
+	@echo "  prod-deploy       - Full prod deploy (up + migrate + ps)"
 	@echo ""
 	@echo "Observability:"
 	@echo "  obs-up            - Start Prometheus + Grafana"
@@ -145,6 +151,21 @@ prod-restart:
 
 prod-migrate:
 	$(PROD_COMPOSE) run --rm app uv run alembic upgrade head
+
+prod-db-up:
+	$(PROD_COMPOSE) up -d db
+
+prod-app-up:
+	$(PROD_COMPOSE) up -d app
+
+prod-backup:
+	mkdir -p $(BACKUP_DIR)
+	$(PROD_COMPOSE) exec -T db sh -lc 'pg_dump -U "$$POSTGRES_USER" "$$POSTGRES_DB"' > $(BACKUP_DIR)/job_monitor_$$(date +%F).sql
+
+prod-deploy:
+	$(MAKE) prod-up
+	$(MAKE) prod-migrate
+	$(MAKE) prod-ps
 
 obs-up:
 	$(OBS_COMPOSE) up -d

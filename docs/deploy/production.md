@@ -29,7 +29,7 @@ git pull --ff-only
 
 2. Start only database:
 ```bash
-docker-compose -f docker-compose.yml up -d db
+make prod-db-up
 ```
 
 3. Apply migrations:
@@ -39,7 +39,7 @@ make prod-migrate
 
 4. Start application:
 ```bash
-docker-compose -f docker-compose.yml up -d app
+make prod-app-up
 ```
 
 5. Check logs:
@@ -53,7 +53,7 @@ make prod-logs SERVICE=app
 2. Complete authorization once.
 3. Restart app:
 ```bash
-docker-compose -f docker-compose.yml restart app
+make prod-restart
 ```
 4. Ensure no re-authorization is required. Session is stored in `telethon_session` volume.
 
@@ -84,6 +84,43 @@ make prod-logs SERVICE=app
 - Metrics endpoint is available on `127.0.0.1:8000/metrics`.
 - Sentry receives errors when `SENTRY_DSN` is configured.
 
+## CI/CD deploy
+
+### GitHub Secrets (Actions)
+
+Add these repository secrets:
+
+- `VPS_HOST` - server IP/domain.
+- `VPS_PORT` - SSH port (`22` by default).
+- `VPS_USER` - SSH user on VPS.
+- `VPS_SSH_KEY` - private key for GitHub Actions.
+- `VPS_APP_DIR` - absolute project path on VPS (for example `/root/apps/JobMonitor`).
+
+### Workflow
+
+- File: `.github/workflows/deploy-prod.yml`
+- Trigger: manual (`Run workflow`).
+- Fast gate before deploy: `uv run ruff check app`.
+- Deploy transport: SSH (`appleboy/ssh-action`).
+- Server deploy command: `make prod-deploy`.
+
+### Run deploy from GitHub
+
+1. Open `Actions` -> `Deploy Production`.
+2. Click `Run workflow`.
+3. Keep `ref=main` (or choose another branch/tag).
+4. Wait for job to finish and verify server status in logs.
+
+### Post-deploy checks
+
+```bash
+make prod-logs SERVICE=app
+make prod-ps
+```
+
+- Verify bot responds to `/start`.
+- Verify metrics endpoint `127.0.0.1:8000/metrics`.
+
 ## Rollback
 
 1. Checkout previous stable commit/tag:
@@ -103,8 +140,11 @@ make prod-logs SERVICE=app
 
 - Run daily logical backup:
 ```bash
-docker-compose -f docker-compose.yml exec -T db \
-  pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > /opt/backups/job_monitor_$(date +%F).sql
+make prod-backup
+```
+- Optional custom backup path:
+```bash
+make prod-backup BACKUP_DIR=/var/backups/jobmonitor
 ```
 - Store backups outside Docker volumes.
 - Keep at least 7 daily and 4 weekly backups.
