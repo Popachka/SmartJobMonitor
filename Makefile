@@ -14,6 +14,7 @@ BACKUP_DIR ?= /opt/backups
 	dev-up dev-down dev-destroy dev-logs dev-ps dev-restart \
 	prod-up prod-down prod-destroy prod-logs prod-ps prod-restart prod-migrate \
 	prod-db-up prod-app-up prod-backup prod-deploy \
+	precommit-install precommit-run \
 	obs-up obs-down obs-destroy obs-logs obs-ps \
 	dev-up-all dev-down-all dev-destroy-all \
 	prod-up-all prod-down-all prod-destroy-all \
@@ -32,6 +33,8 @@ help:
 	@echo "  test              - Run all tests"
 	@echo "  test-unit         - Run unit tests"
 	@echo "  test-integration  - Run integration tests"
+	@echo "  precommit-install - Install pre-commit hooks"
+	@echo "  precommit-run     - Run pre-commit hooks for all files"
 	@echo "  clean             - Delete temporary files and caches"
 	@echo ""
 	@echo "Docker:"
@@ -103,6 +106,12 @@ test-unit:
 
 test-integration:
 	uv run -m pytest $(TEST_DIR)/integration -q
+
+precommit-install:
+	uv run pre-commit install
+
+precommit-run:
+	uv run pre-commit run --all-files
 
 clean:
 	@echo "Start cleaning..."

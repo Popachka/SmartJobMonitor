@@ -100,7 +100,7 @@ Add these repository secrets:
 
 - File: `.github/workflows/deploy-prod.yml`
 - Trigger: manual (`Run workflow`).
-- Fast gate before deploy: `uv run ruff check app`.
+- Deploy gate before SSH step: `uv run -m pytest -q`.
 - Deploy transport: SSH (`appleboy/ssh-action`).
 - Server deploy command: `make prod-deploy`.
 
@@ -120,6 +120,20 @@ make prod-ps
 
 - Verify bot responds to `/start`.
 - Verify metrics endpoint `127.0.0.1:8000/metrics`.
+
+## Pre-commit (local)
+
+Before first commit, install hooks:
+
+```bash
+make precommit-install
+```
+
+Run hooks manually for all files:
+
+```bash
+make precommit-run
+```
 
 ## Rollback
 

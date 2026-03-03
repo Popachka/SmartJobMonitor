@@ -35,8 +35,8 @@ jobs:
       - name: Sync dependencies
         run: uv sync --dev --frozen
 
-      - name: Quick quality gate (ruff)
-        run: uv run ruff check app
+      - name: Run tests gate
+        run: uv run -m pytest -q
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
