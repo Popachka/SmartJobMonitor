@@ -17,6 +17,8 @@
 - `POSTGRES_PORT=5432`
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `SENTRY_ENV=production`
+- `LOGFIRE_ENABLED=true`
+- `LOGFIRE_TOKEN` (Logfire project write token)
 - `LOGFIRE_ENV=production`
 - `METRICS_ENABLED=true`
 
@@ -42,9 +44,15 @@ make prod-migrate
 make prod-app-up
 ```
 
-5. Check logs:
+5. Start observability stack:
+```bash
+make obs-up
+```
+
+6. Check logs:
 ```bash
 make prod-logs SERVICE=app
+make obs-logs SERVICE=prometheus
 ```
 
 ## Telethon first authorization
@@ -82,7 +90,21 @@ make prod-logs SERVICE=app
 - Bot responds to `/start`.
 - Scraper receives and processes new channel messages.
 - Metrics endpoint is available on `127.0.0.1:8000/metrics`.
+- Prometheus target `job_monitor` is `UP` in `Status -> Targets`.
+- Logfire dashboard `Basic System Metrics (Logfire)` shows CPU/Memory/Process data.
 - Sentry receives errors when `SENTRY_DSN` is configured.
+
+Notes:
+
+- Prometheus `/metrics` powers Grafana and is scraped by Prometheus.
+- Logfire system metrics are exported separately by `logfire.instrument_system_metrics()` and require `LOGFIRE_TOKEN`.
+
+Useful PromQL checks:
+
+- `max(up{job="job_monitor"})`
+- `sum(job_monitor_vacancies_collected_total)`
+- `sum(job_monitor_messages_not_vacancy_total)`
+- `sum by (language) (job_monitor_language_matches_total)`
 
 ## CI/CD deploy
 
@@ -116,10 +138,17 @@ Add these repository secrets:
 ```bash
 make prod-logs SERVICE=app
 make prod-ps
+make obs-ps
 ```
 
 - Verify bot responds to `/start`.
 - Verify metrics endpoint `127.0.0.1:8000/metrics`.
+- Verify Prometheus target `job_monitor` is `UP`.
+- Verify Grafana dashboard panels:
+  - `Service Up`
+  - `Collected Vacancies (Since Start)`
+  - `Not Vacancy (Since Start)`
+  - `Language Matches by Users`
 
 ## Pre-commit (local)
 

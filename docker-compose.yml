@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB?Variable is not set}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - job_monitor_backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -56,7 +58,13 @@ services:
     volumes:
       - telethon_session:/app/data
       - ./channels_map.json:/app/channels_map.json:ro
+    networks:
+      - job_monitor_backend
 
 volumes:
   postgres_data:
   telethon_session:
+
+networks:
+  job_monitor_backend:
+    name: job_monitor_backend

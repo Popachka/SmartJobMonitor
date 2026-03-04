@@ -34,6 +34,7 @@ class VacancyService:
         result = await self._extractor.parse_vacancy(text)
         if not result.is_vacancy:
             logger.info("Message is not a vacancy")
+            self._observability.observe_not_vacancy_detected(1)
             return None
 
         logger.info(

@@ -1382,7 +1382,7 @@ dependencies = [
     { name = "aiogram" },
     { name = "alembic" },
     { name = "asyncpg" },
-    { name = "logfire" },
+    { name = "logfire", extra = ["system-metrics"] },
     { name = "pillow" },
     { name = "prometheus-client" },
     { name = "psutil" },
@@ -1413,7 +1413,7 @@ requires-dist = [
     { name = "aiogram", specifier = ">=3.25.0" },
     { name = "alembic", specifier = ">=1.18.4" },
     { name = "asyncpg", specifier = ">=0.31.0" },
-    { name = "logfire", specifier = ">=4.25.0" },
+    { name = "logfire", extras = ["system-metrics"], specifier = ">=4.25.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "prometheus-client", specifier = ">=0.23.1" },
     { name = "psutil", specifier = ">=7.1.3" },
@@ -1587,6 +1587,9 @@ wheels = [
 [package.optional-dependencies]
 httpx = [
     { name = "opentelemetry-instrumentation-httpx" },
+]
+system-metrics = [
+    { name = "opentelemetry-instrumentation-system-metrics" },
 ]
 
 [[package]]
@@ -2023,6 +2026,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/86/08/11208bcfcab4fc2023252c3f322aa397fd9ad948355fea60f5fc98648603/opentelemetry_instrumentation_httpx-0.60b1.tar.gz", hash = "sha256:a506ebaf28c60112cbe70ad4f0338f8603f148938cb7b6794ce1051cd2b270ae", size = 20611, upload-time = "2025-12-11T13:37:01.661Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/43/59/b98e84eebf745ffc75397eaad4763795bff8a30cbf2373a50ed4e70646c5/opentelemetry_instrumentation_httpx-0.60b1-py3-none-any.whl", hash = "sha256:f37636dd742ad2af83d896ba69601ed28da51fa4e25d1ab62fde89ce413e275b", size = 15701, upload-time = "2025-12-11T13:36:04.56Z" },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-system-metrics"
+version = "0.60b1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "psutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c5/68/55e946130c4630fda3cce8ceccb9d6ccd9967278cd082af66243c5228145/opentelemetry_instrumentation_system_metrics-0.60b1.tar.gz", hash = "sha256:b9c3a40f31f20c694c386bd28fa0eed5268532bb78f545bbd8e23bbe99d81e09", size = 15868, upload-time = "2025-12-11T13:37:15.267Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/98/a1/fef3de5fba4f80012af7be501e8d216048aa710929d9818e1d2cd3ddc854/opentelemetry_instrumentation_system_metrics-0.60b1-py3-none-any.whl", hash = "sha256:21fb040ed6cfabc8ca97c63548fd01689f7ec92c64bbc6cfd08f30489a336fc6", size = 13516, upload-time = "2025-12-11T13:36:27.579Z" },
 ]
 
 [[package]]

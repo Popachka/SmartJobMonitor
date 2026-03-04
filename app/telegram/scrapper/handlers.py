@@ -70,6 +70,7 @@ class TelegramScraper:
                     matcher = MatcherService(
                         MatchingUnitOfWork(self._session_factory),
                         self._notification_service,
+                        self._observability,
                     )
                     matched_user_ids = await matcher.match_vacancy(vacancy_id)
                     logger.info(

@@ -1,6 +1,7 @@
 from time import perf_counter
 
 from app.application.ports.notification_port import INotificationService
+from app.application.ports.observability_port import IObservabilityService
 from app.application.ports.unit_of_work import MatchingUnitOfWork
 from app.core.logger import get_app_logger
 from app.domain.matching.policy import evaluate_match
@@ -13,9 +14,15 @@ logger = get_app_logger(__name__)
 
 
 class MatcherService:
-    def __init__(self, uow: MatchingUnitOfWork, notification_service: INotificationService) -> None:
+    def __init__(
+        self,
+        uow: MatchingUnitOfWork,
+        notification_service: INotificationService,
+        observability: IObservabilityService,
+    ) -> None:
         self._uow = uow
         self._notification_service = notification_service
+        self._observability = observability
 
     async def match_vacancy(self, vacancy_id: VacancyId) -> list[UserId]:
         start = perf_counter()
@@ -42,6 +49,7 @@ class MatcherService:
                 decision = evaluate_match(vacancy=vacancy, user=candidate)
                 if decision.accepted:
                     matched_user_ids.append(candidate.tg_id)
+                    self._observe_language_matches(vacancy=vacancy, user=candidate)
                     continue
 
                 rejected_count += 1
@@ -85,3 +93,9 @@ class MatcherService:
             primary_languages=primary_languages,
             is_active=True,
         )
+
+    def _observe_language_matches(self, vacancy: Vacancy, user: User) -> None:
+        vacancy_languages = {language.value.lower() for language in vacancy.primary_languages.items}
+        user_languages = {language.value.lower() for language in user.cv_primary_languages.items}
+        for language in sorted(vacancy_languages & user_languages):
+            self._observability.observe_language_match(language=language, count=1)
