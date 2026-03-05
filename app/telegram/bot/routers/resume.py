@@ -62,33 +62,32 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
     await state.set_state(BotStates.processing_resume)
 
     async def reset_to_menu(err_msg: str) -> None:
-        await message.answer(f"⚠️ {err_msg}", reply_markup=get_main_menu_kb())
         await state.set_state(BotStates.main_menu)
+        try:
+            await message.answer(f"⚠️ {err_msg}", reply_markup=get_main_menu_kb())
+        except Exception:
+            logger.exception("Failed to send resume error message")
 
-    try:
-        parser = ParserFactory.get_parser_by_extension(file_name)
-    except ValueError:
-        await reset_to_menu("Формат не поддерживается.")
-        return
-
-    processing_message = await message.answer(
-        "⏳ Резюме в обработке. Обычно это занимает 1–2 минуты.",
-    )
-    await message.answer(
-        "Что я учитываю при подборе: 🎯\n"
-        "• Специализацию (Backend, Frontend, Fullstack и др.)\n"
-        "• Основные языки (Python, Java, C# и др.)\n"
-        "• Доп. фильтры из настроек: опыт, зарплата, формат\n\n"
-        "Если в резюме указано несколько направлений или языков, я учту все.",
-        reply_markup=get_main_menu_kb(),
-    )
-    user = message.from_user
-    if user is None:
-        await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
-        return
-
+    processing_message: Message | None = None
     buffer = BytesIO()
     try:
+        parser = ParserFactory.get_parser_by_extension(file_name)
+        processing_message = await message.answer(
+            "⏳ Резюме в обработке. Обычно это занимает 1–2 минуты.",
+        )
+        await message.answer(
+            "Что я учитываю при подборе: 🎯\n"
+            "• Специализацию (Backend, Frontend, Fullstack и др.)\n"
+            "• Основные языки (Python, Java, C# и др.)\n"
+            "• Доп. фильтры из настроек: опыт, зарплата, формат\n\n"
+            "Если в резюме указано несколько направлений или языков, я учту все.",
+            reply_markup=get_main_menu_kb(),
+        )
+        user = message.from_user
+        if user is None:
+            await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
+            return
+
         await message.bot.download(document.file_id, destination=buffer)
         dto = await parser.extract_text(buffer)
 
@@ -98,15 +97,18 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
             await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
             return
         try:
-            await processing_message.edit_text("✅ Резюме обработалось.")
-        except Exception as e:
-            logger.error(f"Failed to edit message: {e}")
+            if processing_message is not None:
+                await processing_message.edit_text("✅ Резюме обработалось.")
+        except Exception:
+            logger.exception("Failed to edit processing message")
 
+        await state.set_state(BotStates.main_menu)
         await message.answer(
             "Отслеживание включено: теперь я буду присылать подходящие вакансии. 🔎"
         )
-        await state.set_state(BotStates.main_menu)
 
+    except ValueError:
+        await reset_to_menu("Формат не поддерживается.")
     except NotAResumeError:
         await reset_to_menu("Этот файл не похож на резюме.")
     except TooManyPagesError:
@@ -118,6 +120,8 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
         await reset_to_menu("Произошла ошибка при анализе.")
     finally:
         buffer.close()
+        if await state.get_state() == BotStates.processing_resume.state:
+            await state.set_state(BotStates.main_menu)
 
 
 @router.message(StateFilter(BotStates.waiting_resume))
@@ -133,6 +137,15 @@ async def waiting_resume_fallback(message: Message) -> None:
 @router.message(StateFilter(BotStates.processing_resume), F.text == UPLOAD_BUTTON_TEXT)
 async def processing_resume_block(message: Message) -> None:
     await message.answer("Резюме уже в обработке. Обычно это занимает 1–2 минуты.")
+
+
+@router.message(StateFilter(BotStates.processing_resume), F.text == CANCEL_BUTTON_TEXT)
+async def processing_resume_cancel(message: Message, state: FSMContext) -> None:
+    await state.set_state(BotStates.main_menu)
+    await message.answer(
+        "Обработка прервана. Можешь отправить резюме заново.",
+        reply_markup=get_main_menu_kb(),
+    )
 
 
 @router.message(StateFilter(BotStates.processing_resume), F.document)

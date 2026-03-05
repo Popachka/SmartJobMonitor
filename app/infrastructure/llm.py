@@ -10,7 +10,7 @@ from app.application.dto import (
     OutVacancyParse,
 )
 from app.core.config import config
-
+from app.domain.shared.value_objects import LanguageType
 
 def get_google_model() -> Model:
     provider = GoogleProvider(api_key=config.GOOGLE_API_KEY)
@@ -19,6 +19,7 @@ def get_google_model() -> Model:
 
 @lru_cache(maxsize=1)
 def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
+    allowed_languages = ", ".join(language.value for language in LanguageType)
     system_prompt = (
         "Ты — строгий фильтр IT-вакансий. Ошибка — если принять не‑вакансию.\n\n"
         "СНАЧАЛА реши is_vacancy.\n"
@@ -40,21 +41,12 @@ def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
         "   - Если указан диапазон '2-4 года', бери нижнюю границу (24).\n"
         "   - Если годы не указаны, ориентируйся на грейд: "
         "Internship=0, Junior=12, Middle=36, Senior=60.\n"
-        "4. 'primary_languages': выбирай только из списка разрешенных (Literal). "
-        "Если языка нет в списке — игнорируй.\n"
-        "   - Если язык не указан напрямую, определи его по фреймворкам/экосистеме.\n"
-        "   - Vue, React, Angular, Next.js, Nuxt.js, Node.js, NestJS, Express => JavaScript.\n"
-        "   - Если явно указано TypeScript/TS => TypeScript (иначе для пункта выше оставляй JavaScript).\n"
-        "   - Django, FastAPI, Flask, Celery => Python.\n"
-        "   - Spring, Hibernate, Maven, Gradle => Java.\n"
-        "   - .NET, ASP.NET, Entity Framework, LINQ => C#.\n"
-        "   - Laravel, Symfony => PHP.\n"
-        "   - Ruby on Rails => Ruby.\n"
-        "   - Gin, Echo, Fiber => Go.\n"
-        "   - Actix, Rocket, Tokio => Rust.\n"
-        "   - SwiftUI, UIKit => Swift.\n"
-        "   - Qt, Boost => C++.\n"
-        "   - Не выводи язык только по инфраструктурным инструментам (Docker, Kubernetes, PostgreSQL и т.п.).\n"
+        f"4. 'primary_languages': выбирай только из LanguageType: {allowed_languages}.\n"
+        "   - Если есть явное упоминание языка из списка, используй его.\n"
+        "   - Если явного языка нет, но есть технологии/фреймворки, сопоставь к наиболее подходящему языку только из списка.\n"
+        "   - Пример: React/Vue/Angular -> JavaScript.\n"
+        "   - Если сопоставить нельзя, не добавляй язык.\n"
+        "   - Не определяй язык только по инфраструктуре (Docker, Kubernetes, PostgreSQL и т.п.).\n"
         "5. 'tech_stack': извлекай конкретные технологии (FastAPI, PostgreSQL и т.д.).\n"
         "6. 'salary': если указан диапазон (например, 15000-20000) — бери минимальную сумму. "
         "Если зарплата не указана — верни null. Валюту бери из описания, если не указана — null.\n"
@@ -73,26 +65,19 @@ def get_vacancy_parse_agent() -> Agent[None, OutVacancyParse]:
 
 @lru_cache(maxsize=1)
 def get_resume_parse_agent() -> Agent[None, OutResumeParse]:
+    allowed_languages = ", ".join(language.value for language in LanguageType)
     system_prompt = (
         "Ты — эксперт по анализу технических резюме. Твоя задача: перевести "
         "неструктурированный текст в признаки.\n\n"
         "ПРАВИЛА ИЗВЛЕЧЕНИЯ:\n"
         "1. 'is_resume': true только для CV и профилей опыта.\n"
         "2. 'specializations': выбери только из списка Literal.\n"
-        "3. 'primary_languages': выбери только из списка Literal.\n"
-        "   - Если язык не указан напрямую, определи его по фреймворкам/экосистеме.\n"
-        "   - Vue, React, Angular, Next.js, Nuxt.js, Node.js, NestJS, Express => JavaScript.\n"
-        "   - Если явно указано TypeScript/TS => TypeScript (иначе для пункта выше оставляй JavaScript).\n"
-        "   - Django, FastAPI, Flask, Celery => Python.\n"
-        "   - Spring, Hibernate, Maven, Gradle => Java.\n"
-        "   - .NET, ASP.NET, Entity Framework, LINQ => C#.\n"
-        "   - Laravel, Symfony => PHP.\n"
-        "   - Ruby on Rails => Ruby.\n"
-        "   - Gin, Echo, Fiber => Go.\n"
-        "   - Actix, Rocket, Tokio => Rust.\n"
-        "   - SwiftUI, UIKit => Swift.\n"
-        "   - Qt, Boost => C++.\n"
-        "   - Не выводи язык только по инфраструктурным инструментам (Docker, Kubernetes, PostgreSQL и т.п.).\n"
+        f"3. 'primary_languages': выбирай только из LanguageType: {allowed_languages}.\n"
+        "   - Если есть явное упоминание языка из списка, используй его.\n"
+        "   - Если явного языка нет, но есть технологии/фреймворки, сопоставь к наиболее подходящему языку только из списка.\n"
+        "   - Пример: React/Vue/Angular -> JavaScript.\n"
+        "   - Если сопоставить нельзя, не добавляй язык.\n"
+        "   - Не определяй язык только по инфраструктуре (Docker, Kubernetes, PostgreSQL и т.п.).\n"
         "4. 'experience_months': РАССЧИТАЙ общий коммерческий опыт.\n"
         "   - Если указано '3 года', пиши 36.\n"
         "   - Если указаны даты (н-р, октябрь 2022 - по н.в.), вычисли количество "
