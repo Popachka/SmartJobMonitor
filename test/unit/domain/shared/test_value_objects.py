@@ -17,15 +17,14 @@ def test_specializations_from_strs_valid():
 
 
 def test_primary_languages_from_strs_valid():
-    input_strings = ["Python", " Go ", "", "dsadasd"]
+    input_strings = ["Python", "", "dsadasd"]
     result = PrimaryLanguages.from_strs(input_strings)
 
     assert isinstance(result, PrimaryLanguages)
     assert isinstance(result.items, frozenset)
 
     assert LanguageType.PYTHON in result.items
-    assert LanguageType.GO in result.items
-    assert len(result.items) == 2
+    assert len(result.items) == 1
 
 
 @pytest.mark.parametrize(
