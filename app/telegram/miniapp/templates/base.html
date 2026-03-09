@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ page_title }} | JobMonitor</title>
+    <link rel="stylesheet" href="{{ request.url_for('miniapp-static', path='css/app.css') }}" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body data-page="{{ active_page }}">
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">JobMonitor mini-app</p>
+        <h1>{{ page_title }}</h1>
+        <p class="description">{{ page_description }}</p>
+      </header>
+
+      <nav class="tabs" aria-label="Mini-app sections">
+        <a class="tab{% if active_page == 'specialty' %} is-active{% endif %}" href="{{ request.url_for('miniapp-specialty') }}">Специальность</a>
+        <a class="tab{% if active_page == 'format' %} is-active{% endif %}" href="{{ request.url_for('miniapp-format') }}">Формат</a>
+        <a class="tab{% if active_page == 'salary' %} is-active{% endif %}" href="{{ request.url_for('miniapp-salary') }}">Зарплата</a>
+      </nav>
+
+      <section class="card">
+        {% block content %}{% endblock %}
+      </section>
+
+      <p class="status" data-status>Это шаблон. Сохранение пока не подключено.</p>
+    </main>
+
+    <script src="{{ request.url_for('miniapp-static', path='js/app.js') }}"></script>
+  </body>
+</html>

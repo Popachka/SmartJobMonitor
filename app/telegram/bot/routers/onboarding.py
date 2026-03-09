@@ -12,6 +12,12 @@ from app.telegram.bot.states import BotStates
 router = Router()
 logger = get_app_logger(__name__)
 
+AVAILABLE_COMMANDS_TEXT = (
+    "/settings — изменить настройки ленты вакансий\n"
+    "/profile — проверить свой профиль\n"
+    "/help — как это работает"
+)
+
 
 @router.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext) -> None:
@@ -26,7 +32,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     uow = UserUnitOfWork(async_session_factory)
     service = UserService(uow)
     try:
-        user = await service.get_or_create_user(
+        user, is_new = await service.get_or_create_user(
             tg_id=user_id,
             username=message.from_user.username,
         )
@@ -37,22 +43,16 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         await state.clear()
         return
 
-    body_text = (
-        "Я помогу тебе следить за вакансиями, чтобы не пришлось вручную перебирать десятки "
-        "каналов. Бот сам найдет подходящие посты и пришлет их тебе.\n\n"
-        "С чего начать:\n"
-        "• Загрузи резюме. Я посмотрю твой стек и специализацию, "
-        "чтобы понимать, что именно искать.\n"
-        "• Уточни фильтры. Настрой зарплату и формат работы, чтобы я не присылал лишнего.\n\n"
-        "Теперь можно не отвлекаться на бесконечные уведомления из групп — я напишу только тогда, "
-        "когда появится что-то, что тебе действительно подойдет. 💼\n\n"
-        "Жми кнопку «📄 Загрузить новое резюме», и начнем."
-    )
-
-    user_name = user.username or "друг"
-    welcome_text = f"Привет, {user_name}! 👋\n\n{body_text}"
     await state.set_state(BotStates.main_menu)
-    await message.answer(welcome_text, reply_markup=get_main_menu_kb())
+    if is_new:
+        intro_text = "Регистрация завершена. Добро пожаловать в бота."
+    else:
+        intro_text = "Вы уже зарегистрированы в боте."
+
+    await message.answer(
+        f"{intro_text} Вот список доступных команд 👇\n\n{AVAILABLE_COMMANDS_TEXT}",
+        reply_markup=get_main_menu_kb(),
+    )
 
 
 @router.message(F.text == START_BUTTON_TEXT)

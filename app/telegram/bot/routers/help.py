@@ -1,7 +1,7 @@
 from html import escape
 
 from aiogram import F, Router
-from aiogram.filters import StateFilter
+from aiogram.filters import Command, StateFilter
 from aiogram.types import Message
 
 from app.domain.shared import LanguageType
@@ -15,15 +15,20 @@ router = Router()
     StateFilter(BotStates.main_menu, BotStates.processing_resume, None),
     F.text == HELP_BUTTON_TEXT,
 )
+@router.message(
+    StateFilter(BotStates.main_menu, BotStates.processing_resume, None),
+    Command("help"),
+)
 async def cmd_help(message: Message) -> None:
     available_professions = "\n".join(
         f"<b>{escape(language.value)}</b>" for language in LanguageType
     )
     help_text = (
         "❓ Как это работает?\n\n"
-        "1. Нажмите «Загрузить новое резюме».\n"
-        "2. Отправьте файл в формате PDF.\n"
-        "3. Настройте фильтры через «Настроить отслеживание».\n\n"
+        "1. Откройте профиль через /profile или кнопку «Мой профиль».\n"
+        "2. Выберите «Заполнить форму (mini-app)», чтобы вручную настроить поиск.\n"
+        "3. Или нажмите «Загрузить резюме», чтобы бот сам разобрал профиль из PDF.\n\n"
+        "Команда /settings открывает меню ручной настройки.\n\n"
         "Сейчас доступны вакансии для профессий:\n"
         f"{available_professions}\n\n"
     )

@@ -22,6 +22,12 @@ class BaseAppSettings(BaseSettings):
     TELETHON_LOGIN_MODE: str = "qr"
     TELEGRAM_2FA_PASSWORD: str | None = None
     BOT_TOKEN: str
+
+    MINI_APP_BASE_URL: str = ""
+    MINI_APP_SAVE_API_URL: str = ""
+    MINI_APP_SERVER_HOST: str
+    MINI_APP_SERVER_PORT: int
+
     CHANNELS_MAP_PATH: str = "channels_map.json"
     MIRROR_CHANNEL: int
 
@@ -114,6 +120,7 @@ class BaseAppSettings(BaseSettings):
         required_strings = {
             "API_HASH": self.API_HASH,
             "BOT_TOKEN": self.BOT_TOKEN,
+            "MINI_APP_BASE_URL": self.MINI_APP_BASE_URL,
             "GOOGLE_API_KEY": self.GOOGLE_API_KEY,
             "POSTGRES_SERVER": self.POSTGRES_SERVER,
             "POSTGRES_USER": self.POSTGRES_USER,

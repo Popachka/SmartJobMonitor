@@ -3,7 +3,7 @@ from io import BytesIO
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from app.application.services.user_service import UserService
 from app.core.logger import get_app_logger
@@ -18,7 +18,7 @@ from app.telegram.bot.keyboards import (
     CANCEL_BUTTON_TEXT,
     HELP_BUTTON_TEXT,
     PROFILE_BUTTON_TEXT,
-    TRACKING_BUTTON_TEXT,
+    PROFILE_UPLOAD_RESUME_CALLBACK,
     UPLOAD_BUTTON_TEXT,
     get_cancel_kb,
     get_main_menu_kb,
@@ -29,14 +29,32 @@ router = Router()
 logger = get_app_logger(__name__)
 
 
-@router.message(StateFilter(BotStates.main_menu, None), F.text == UPLOAD_BUTTON_TEXT)
-async def process_upload_button(message: Message, state: FSMContext) -> None:
+async def _send_resume_prompt(message: Message, state: FSMContext) -> None:
     await state.set_state(BotStates.waiting_resume)
     await message.answer(
+        "📄 Перед отправкой резюме:\n"
+        "• Поддерживается только PDF\n"
+        "• Максимальный размер: 15 МБ\n"
+        "• Максимум: 10 страниц\n\n"
         "Пришли, пожалуйста, своё резюме файлом в формате PDF. 📄\n"
         "Я сразу приступлю к его изучению.",
         reply_markup=get_cancel_kb(),
     )
+
+
+@router.callback_query(F.data == PROFILE_UPLOAD_RESUME_CALLBACK)
+async def open_resume_rules_from_profile(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.answer()
+    if callback.message is None:
+        return
+    if not isinstance(callback.message, Message):
+        return
+    await _send_resume_prompt(callback.message, state)
+
+
+@router.message(StateFilter(BotStates.main_menu, None), F.text == UPLOAD_BUTTON_TEXT)
+async def process_upload_button(message: Message, state: FSMContext) -> None:
+    await _send_resume_prompt(message, state)
 
 
 @router.message(StateFilter(BotStates.waiting_resume), F.text == CANCEL_BUTTON_TEXT)
@@ -48,7 +66,10 @@ async def process_cancel(message: Message, state: FSMContext) -> None:
     )
 
 
-@router.message(StateFilter(BotStates.waiting_resume), F.document)
+@router.message(
+    StateFilter(BotStates.waiting_resume, BotStates.main_menu, None),
+    F.document,
+)
 async def handle_resume_document(message: Message, state: FSMContext) -> None:
     document = message.document
     if document is None:
@@ -58,7 +79,6 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
         return
 
     file_name = document.file_name or ""
-
     await state.set_state(BotStates.processing_resume)
 
     async def reset_to_menu(err_msg: str) -> None:
@@ -78,8 +98,8 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
         await message.answer(
             "Что я учитываю при подборе: 🎯\n"
             "• Специализацию (Backend, Frontend, Fullstack и др.)\n"
-            "• Основные языки (Python, Java, C# и др.)\n"
-            "• Доп. фильтры из настроек: опыт, зарплата, формат\n\n"
+            "• Основные языки (Python, JavaScript)\n"
+            "• Доп. фильтры из настроек: зарплата и формат\n\n"
             "Если в резюме указано несколько направлений или языков, я учту все.",
             reply_markup=get_main_menu_kb(),
         )
@@ -88,7 +108,11 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
             await reset_to_menu("Нажмите «Начать пользоваться ботом», чтобы продолжить.")
             return
 
-        await message.bot.download(document.file_id, destination=buffer)
+        bot = message.bot
+        if bot is None:
+            await reset_to_menu("Не удалось получить контекст бота. Попробуйте снова.")
+            return
+        await bot.download(document.file_id, destination=buffer)
         dto = await parser.extract_text(buffer)
 
         service = UserService(UserUnitOfWork(async_session_factory))
@@ -104,7 +128,7 @@ async def handle_resume_document(message: Message, state: FSMContext) -> None:
 
         await state.set_state(BotStates.main_menu)
         await message.answer(
-            "Отслеживание включено: теперь я буду присылать подходящие вакансии. 🔎"
+            "Профиль обновлен из резюме. Теперь буду присылать подходящие вакансии. 🔎"
         )
 
     except ValueError:
@@ -155,10 +179,12 @@ async def processing_resume_document_block(message: Message) -> None:
 
 @router.message(
     StateFilter(BotStates.main_menu, None),
-    ~F.text.in_({UPLOAD_BUTTON_TEXT, TRACKING_BUTTON_TEXT, HELP_BUTTON_TEXT, PROFILE_BUTTON_TEXT}),
+    F.text,
+    ~F.text.startswith("/"),
+    ~F.text.in_({UPLOAD_BUTTON_TEXT, HELP_BUTTON_TEXT, PROFILE_BUTTON_TEXT}),
 )
 async def main_menu_fallback(message: Message) -> None:
     await message.answer(
-        "Используйте кнопки меню.",
+        "Используйте кнопки меню или команды /profile, /settings, /help.",
         reply_markup=get_main_menu_kb(),
     )

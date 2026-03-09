@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form class="form-grid">
+  <fieldset class="stack">
+    <legend class="field-label">Режим работы</legend>
+    {% for option in options %}
+    <label class="radio-card">
+      <input
+        type="radio"
+        name="work_format_choice"
+        value="{{ option.value }}"
+        {% if option.value == current_value %}checked{% endif %}
+      />
+      <span>{{ option.label }}</span>
+    </label>
+    {% endfor %}
+  </fieldset>
+
+  <button class="primary-button" type="button" data-placeholder-action>
+    {{ action_label }}
+  </button>
+</form>
+{% endblock %}

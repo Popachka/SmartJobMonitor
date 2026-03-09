@@ -5,6 +5,7 @@ from enum import StrEnum
 class MatchRejectionReason(StrEnum):
     EXP = "exp"
     SALARY = "salary"
+    FORMAT = "format"
     STACK = "stack"
 
 

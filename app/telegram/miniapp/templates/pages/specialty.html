@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form class="form-grid">
+  <section>
+    <label class="field-label">Специализации</label>
+    <div class="chips">
+      {% for item in specialization_options %}
+      <label class="chip">
+        <input type="checkbox" {% if item in selected_specializations %}checked{% endif %} />
+        <span>{{ item }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section>
+    <label class="field-label">Основные языки</label>
+    <div class="chips">
+      {% for item in language_options %}
+      <label class="chip">
+        <input type="checkbox" {% if item in selected_languages %}checked{% endif %} />
+        <span>{{ item }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <button class="primary-button" type="button" data-placeholder-action>
+    {{ action_label }}
+  </button>
+</form>
+{% endblock %}

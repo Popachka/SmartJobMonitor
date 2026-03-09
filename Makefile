@@ -9,7 +9,7 @@ PROD_COMPOSE = docker-compose -f docker-compose.yml
 OBS_COMPOSE = docker-compose -f docker-compose.observability.yml
 BACKUP_DIR ?= /opt/backups
 
-.PHONY: help venv install run lint format test test-unit test-integration clean \
+.PHONY: help venv install run run-miniapp lint format test test-unit test-integration clean \
 	docker-build \
 	dev-up dev-down dev-destroy dev-logs dev-ps dev-restart \
 	prod-up prod-down prod-destroy prod-logs prod-ps prod-restart prod-migrate \
@@ -27,7 +27,8 @@ help:
 	@echo "Available make commands:"
 	@echo "  venv              - Create a virtual environment (uv)"
 	@echo "  install           - Install project dependencies (uv sync)"
-	@echo "  run               - Run the app locally"
+	@echo "  run               - Run the app locally (bot + scraper + mini-app)"
+	@echo "  run-miniapp       - Run only the mini-app server locally"
 	@echo "  lint              - Run ruff + mypy"
 	@echo "  format            - Auto-format with ruff"
 	@echo "  test              - Run all tests"
@@ -88,6 +89,9 @@ install:
 
 run:
 	uv run -m $(PYTHON_MAIN)
+
+run-miniapp:
+	uv run -m app.telegram.miniapp.main
 
 lint:
 	@echo "Starting checks..."
