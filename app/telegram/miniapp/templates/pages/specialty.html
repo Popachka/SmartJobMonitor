@@ -1,33 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form class="form-grid">
-  <section>
-    <label class="field-label">Специализации</label>
-    <div class="chips">
+<form
+  class="settings-form"
+  data-miniapp-form
+  data-page-kind="specialty"
+  data-save-url="{{ save_url }}"
+  data-success-text="{{ success_text }}"
+>
+  <section class="form-section">
+    <h2 class="section-title">Специализации</h2>
+    <div class="choice-grid">
       {% for item in specialization_options %}
-      <label class="chip">
-        <input type="checkbox" {% if item in selected_specializations %}checked{% endif %} />
-        <span>{{ item }}</span>
+      <label class="choice-chip">
+        <input
+          class="choice-chip__input"
+          type="checkbox"
+          name="specializations"
+          value="{{ item }}"
+          {% if item in selected_specializations %}checked{% endif %}
+        />
+        <span class="choice-chip__label">{{ item }}</span>
       </label>
       {% endfor %}
     </div>
   </section>
 
-  <section>
-    <label class="field-label">Основные языки</label>
-    <div class="chips">
+  <section class="form-section">
+    <h2 class="section-title">Основные языки</h2>
+    <div class="choice-grid">
       {% for item in language_options %}
-      <label class="chip">
-        <input type="checkbox" {% if item in selected_languages %}checked{% endif %} />
-        <span>{{ item }}</span>
+      <label class="choice-chip">
+        <input
+          class="choice-chip__input"
+          type="checkbox"
+          name="primary_languages"
+          value="{{ item }}"
+          {% if item in selected_languages %}checked{% endif %}
+        />
+        <span class="choice-chip__label">{{ item }}</span>
       </label>
       {% endfor %}
     </div>
   </section>
 
-  <button class="primary-button" type="button" data-placeholder-action>
-    {{ action_label }}
-  </button>
+  <p class="form-status" data-status aria-live="polite"></p>
+
+  <div class="sticky-action-bar">
+    <button class="save-button" type="submit" data-submit-button>{{ action_label }}</button>
+  </div>
 </form>
 {% endblock %}

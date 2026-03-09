@@ -1,29 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form class="form-grid">
-  <label class="field">
-    <span class="field-label">Режим</span>
-    <select name="salary_mode">
-      <option value="ANY" {% if salary_mode == 'ANY' %}selected{% endif %}>Любая зарплата</option>
-      <option value="FROM" {% if salary_mode == 'FROM' %}selected{% endif %}>От суммы</option>
-    </select>
-  </label>
+<form
+  class="settings-form"
+  data-miniapp-form
+  data-page-kind="salary"
+  data-save-url="{{ save_url }}"
+  data-success-text="{{ success_text }}"
+>
+  <section class="form-section">
+    <h2 class="section-title">Режим зарплаты</h2>
+    <div class="choice-grid">
+      <label class="choice-chip">
+        <input
+          class="choice-chip__input"
+          type="radio"
+          name="salary_mode"
+          value="ANY"
+          {% if salary_mode == 'ANY' %}checked{% endif %}
+        />
+        <span class="choice-chip__label">Любая</span>
+      </label>
 
-  <label class="field">
-    <span class="field-label">Сумма в рублях</span>
-    <input
-      type="number"
-      name="salary_amount_rub"
-      inputmode="numeric"
-      min="0"
-      placeholder="Например, 250000"
-      value="{{ salary_amount }}"
-    />
-  </label>
+      <label class="choice-chip">
+        <input
+          class="choice-chip__input"
+          type="radio"
+          name="salary_mode"
+          value="FROM"
+          {% if salary_mode == 'FROM' %}checked{% endif %}
+        />
+        <span class="choice-chip__label">От суммы</span>
+      </label>
+    </div>
+  </section>
 
-  <button class="primary-button" type="button" data-placeholder-action>
-    {{ action_label }}
-  </button>
+  <section
+    class="form-section"
+    data-salary-amount-field
+    {% if salary_mode != 'FROM' %}hidden{% endif %}
+  >
+    <h2 class="section-title">Сумма в рублях</h2>
+    <label class="input-block">
+      <span class="input-caption">Введите сумму</span>
+      <input
+        class="text-input"
+        type="number"
+        name="salary_amount_rub"
+        inputmode="numeric"
+        min="0"
+        placeholder="Например, 250000"
+        value="{{ salary_amount }}"
+      />
+    </label>
+  </section>
+
+  <p class="form-status" data-status aria-live="polite"></p>
+
+  <div class="sticky-action-bar">
+    <button class="save-button" type="submit" data-submit-button>{{ action_label }}</button>
+  </div>
 </form>
 {% endblock %}
