@@ -6,7 +6,7 @@ from app.application.services.user_service import UserService
 from app.core.config import config
 from app.domain.user.entities import User
 from app.infrastructure.db import UserUnitOfWork, async_session_factory
-from app.infrastructure.telegram.miniapp.auth import MiniAppUserContext, validate_init_data
+from app.telegram.miniapp.auth import MiniAppUserContext, validate_init_data
 
 
 def get_user_service() -> UserService:

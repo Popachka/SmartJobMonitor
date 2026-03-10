@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from aiogram import Bot, Dispatcher
 
-from app.infrastructure.telegram.miniapp import MiniAppServer
+from app.infrastructure.telegram.miniapp_server import MiniAppServer
 from app.infrastructure.telegram.telethon_client import TelethonClientProvider
 from app.telegram.scrapper.handlers import TelegramScraper
 

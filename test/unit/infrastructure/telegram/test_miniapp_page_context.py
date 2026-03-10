@@ -1,6 +1,6 @@
 from app.application.dto.miniapp import WorkFormatChoice
 from app.domain.shared import SkillType, SpecializationType, WorkFormat
-from app.infrastructure.telegram.miniapp.page_context import (
+from app.telegram.miniapp.page_context import (
     build_skill_options,
     build_specialization_options,
     build_work_format_options,

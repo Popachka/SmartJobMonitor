@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.infrastructure.telegram.miniapp.routes import router
-from app.infrastructure.telegram.miniapp.ui import STATIC_DIR
+from app.telegram.miniapp.routes import router
+from app.telegram.miniapp.ui import STATIC_DIR
 
 
 def build_miniapp_app() -> FastAPI:
@@ -13,5 +13,3 @@ def build_miniapp_app() -> FastAPI:
 
 
 app = build_miniapp_app()
-
-__all__ = ["app", "build_miniapp_app"]

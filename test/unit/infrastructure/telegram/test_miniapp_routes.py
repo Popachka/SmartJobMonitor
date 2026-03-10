@@ -9,8 +9,8 @@ from app.core.config import config
 from app.domain.shared import WorkFormat
 from app.domain.user.entities import User
 from app.domain.user.value_objects import FilterMode
-from app.infrastructure.telegram.miniapp.app import build_miniapp_app
-from app.infrastructure.telegram.miniapp.deps import get_user_service
+from app.telegram.miniapp.app import build_miniapp_app
+from app.telegram.miniapp.deps import get_user_service
 
 
 class FakeUserService:

@@ -1,6 +1,6 @@
 import asyncio
 
-from app.infrastructure.runtime import run_application
+from app.bootstrap import run_application
 
 
 async def main() -> None:

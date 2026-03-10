@@ -1,8 +1,8 @@
 import asyncio
 
-from app.infrastructure.runtime.models import RuntimeComponents, RuntimeTasks
-from app.infrastructure.runtime.shutdown import graceful_shutdown, install_shutdown_handlers
-from app.infrastructure.telegram.miniapp import run_miniapp_server
+from app.bootstrap.models import RuntimeComponents, RuntimeTasks
+from app.bootstrap.shutdown import graceful_shutdown, install_shutdown_handlers
+from app.infrastructure.telegram.miniapp_server import run_miniapp_server
 
 
 def start_runtime_tasks(

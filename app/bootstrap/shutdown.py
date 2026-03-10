@@ -3,7 +3,8 @@ import signal
 from contextlib import suppress
 
 from app.core.logger import get_app_logger
-from app.infrastructure.runtime.models import RuntimeComponents, RuntimeTasks
+
+from app.bootstrap.models import RuntimeComponents, RuntimeTasks
 
 logger = get_app_logger(__name__)
 

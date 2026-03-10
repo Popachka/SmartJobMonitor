@@ -18,17 +18,17 @@ from app.application.services.user_service import UserService
 from app.domain.shared.value_objects import WorkFormat
 from app.domain.user.entities import User
 from app.domain.user.value_objects import FilterMode
-from app.infrastructure.telegram.miniapp.deps import (
+from app.telegram.miniapp.deps import (
     get_current_user,
     get_user_service,
     parse_user_context,
 )
-from app.infrastructure.telegram.miniapp.page_context import (
+from app.telegram.miniapp.page_context import (
     build_format_page_context,
     build_salary_page_context,
     build_specialty_page_context,
 )
-from app.infrastructure.telegram.miniapp.ui import templates
+from app.telegram.miniapp.ui import templates
 
 router = APIRouter()
 

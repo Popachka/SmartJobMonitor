@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 import pytest
 
-from app.infrastructure.telegram.miniapp.auth import validate_init_data
+from app.telegram.miniapp.auth import validate_init_data
 
 
 def test_validate_init_data_accepts_valid_payload() -> None:
