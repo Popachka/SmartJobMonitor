@@ -27,16 +27,16 @@
   </section>
 
   <section class="form-section">
-    <h2 class="section-title">Основные языки</h2>
+    <h2 class="section-title">Скиллы</h2>
     <div class="choice-grid">
-      {% for item in language_options %}
+      {% for item in skill_options %}
       <label class="choice-chip">
         <input
           class="choice-chip__input"
           type="checkbox"
-          name="primary_languages"
+          name="skills"
           value="{{ item }}"
-          {% if item in selected_languages %}checked{% endif %}
+          {% if item in selected_skills %}checked{% endif %}
         />
         <span class="choice-chip__label">{{ item }}</span>
       </label>

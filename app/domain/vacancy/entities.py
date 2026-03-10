@@ -3,13 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
-from app.domain.shared.value_objects import (
-    PrimaryLanguages,
-    Salary,
-    Specializations,
-    TechStack,
-    WorkFormat,
-)
+from app.domain.shared.value_objects import Salary, Skills, Specializations, WorkFormat
 from app.domain.vacancy.exceptions import ValidationError
 from app.domain.vacancy.value_objects import ContentHash, VacancyId
 
@@ -19,8 +13,7 @@ class Vacancy:
     id: VacancyId
     text: str
     specializations: Specializations
-    primary_languages: PrimaryLanguages
-    tech_stack: TechStack
+    skills: Skills
 
     mirror_chat_id: int
     mirror_message_id: int
@@ -38,8 +31,7 @@ class Vacancy:
         vacancy_id: UUID,
         text: str,
         specializations_raw: list[str],
-        languages_raw: list[str],
-        tech_stack_raw: list[str] | None,
+        skills_raw: list[str],
         mirror_chat_id: int,
         mirror_message_id: int,
         work_format: WorkFormat,
@@ -48,30 +40,24 @@ class Vacancy:
         created_at: datetime | None = None,
     ) -> "Vacancy":
         if not text or not text.strip():
-            raise ValidationError("Текст вакансии не может быть пустым.")
+            raise ValidationError("Vacancy text cannot be empty.")
 
         specs = Specializations.from_strs(specializations_raw)
         if not specs.items:
-            raise ValidationError(
-                "Вакансия должна содержать хотя бы одну специализацию для матчинга."
-            )
+            raise ValidationError("Vacancy must contain at least one specialization for matching.")
 
-        langs = PrimaryLanguages.from_strs(languages_raw)
-        if not langs.items:
-            raise ValidationError("Основные языки программирования не указаны. Матчинг невозможен.")
-
-        stack = TechStack.create(tech_stack_raw)
+        skills = Skills.from_strs(skills_raw)
+        if not skills.items:
+            raise ValidationError("Vacancy skills are missing. Matching cannot proceed.")
 
         salary_vo = Salary.create(amount=salary_amount, currency=salary_currency)
-
         now = datetime.now(UTC)
 
         return cls(
             id=VacancyId(vacancy_id),
             text=text.strip(),
             specializations=specs,
-            primary_languages=langs,
-            tech_stack=stack,
+            skills=skills,
             mirror_chat_id=mirror_chat_id,
             mirror_message_id=mirror_message_id,
             salary=salary_vo,

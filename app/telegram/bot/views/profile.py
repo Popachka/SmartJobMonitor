@@ -1,11 +1,11 @@
-﻿from app.domain.user.entities import User
+from app.domain.user.entities import User
 from app.domain.user.value_objects import FilterMode
 from app.telegram.bot.views.tracking_settings import format_salary, format_work_format
 
 
 def build_search_profile_text(user: User) -> str:
     specializations = _format_specializations(user)
-    languages = _format_languages(user)
+    skills = _format_skills(user)
 
     salary = format_salary(user.cv_salary)
     work_format = format_work_format(user.cv_work_format)
@@ -15,7 +15,7 @@ def build_search_profile_text(user: User) -> str:
         "",
         "📍 Что мы ищем:",
         _format_search_line("Направление(я)", specializations, bold_value=True),
-        _format_search_line("Основной язык(и)", languages, bold_value=True),
+        _format_search_line("Скиллы", skills, bold_value=True),
         "",
         "⚙️ Настройки фильтров:",
         _format_mode_filter_line(
@@ -74,9 +74,8 @@ def _format_specializations(user: User) -> str | None:
     return ", ".join(values)
 
 
-def _format_languages(user: User) -> str | None:
-    values = sorted(item.value for item in user.cv_primary_languages.items)
+def _format_skills(user: User) -> str | None:
+    values = sorted(item.value for item in user.cv_skills.items)
     if not values:
         return None
     return ", ".join(values)
-

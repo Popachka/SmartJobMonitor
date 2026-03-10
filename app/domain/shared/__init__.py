@@ -1,12 +1,11 @@
 from .domain_errors import DomainError
 from .value_objects import (
     CurrencyType,
-    LanguageType,
-    PrimaryLanguages,
     Salary,
+    Skills,
+    SkillType,
     Specializations,
     SpecializationType,
-    TechStack,
     WorkFormat,
 )
 
@@ -15,9 +14,8 @@ __all__ = [
     "WorkFormat",
     "CurrencyType",
     "SpecializationType",
-    "LanguageType",
+    "SkillType",
     "Specializations",
-    "PrimaryLanguages",
-    "TechStack",
+    "Skills",
     "Salary",
 ]

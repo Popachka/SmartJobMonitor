@@ -19,8 +19,7 @@ class Vacancy(Base):
     text: Mapped[str] = mapped_column(Text)
 
     specializations: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    primary_languages: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    tech_stack: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
 
     mirror_chat_id: Mapped[int] = mapped_column(BigInteger)
     mirror_message_id: Mapped[int] = mapped_column(BigInteger)
@@ -44,8 +43,7 @@ class User(Base):
     cv_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     cv_specializations: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    cv_primary_languages: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    cv_tech_stack: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    cv_skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
 
     cv_salary_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cv_salary_currency: Mapped[str | None] = mapped_column(String, nullable=True)

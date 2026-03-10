@@ -11,10 +11,10 @@ MESSAGES_NOT_VACANCY_TOTAL = Counter(
     "Total number of messages classified as not-a-vacancy by LLM.",
 )
 
-LANGUAGE_MATCHES_TOTAL = Counter(
-    "job_monitor_language_matches_total",
-    "Total number of accepted user-language matches across vacancies.",
-    ["language"],
+SKILL_MATCHES_TOTAL = Counter(
+    "job_monitor_skill_matches_total",
+    "Total number of accepted user-skill matches across vacancies.",
+    ["skill"],
 )
 
 PROCESS_RSS_BYTES = Gauge(

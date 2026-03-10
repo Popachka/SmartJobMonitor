@@ -47,7 +47,7 @@ class UserRepository(IUserRepository):
     async def find_prefiltered_candidates(
         self,
         specializations: set[str],
-        primary_languages: set[str],
+        skills: set[str],
         is_active: bool = True,
     ) -> list[User]:
         query = select(UserModel)
@@ -57,9 +57,9 @@ class UserRepository(IUserRepository):
             query = query.where(
                 UserModel.cv_specializations.bool_op("?|")(array(sorted(specializations)))
             )
-        if primary_languages:
+        if skills:
             query = query.where(
-                UserModel.cv_primary_languages.bool_op("?|")(array(sorted(primary_languages)))
+                UserModel.cv_skills.bool_op("?|")(array(sorted(skills)))
             )
 
         result = await self._session.execute(query)

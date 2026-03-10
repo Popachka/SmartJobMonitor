@@ -1,18 +1,8 @@
 from app.application.dto import OutResumeParse
 from app.application.ports.unit_of_work import UserUnitOfWork
-from app.domain.shared.value_objects import (
-    CurrencyType,
-    PrimaryLanguages,
-    Salary,
-    Specializations,
-    TechStack,
-    WorkFormat,
-)
+from app.domain.shared.value_objects import CurrencyType, Salary, Skills, Specializations, WorkFormat
 from app.domain.user.entities import User
-from app.domain.user.value_objects import (
-    FilterMode,
-    UserId,
-)
+from app.domain.user.value_objects import FilterMode, UserId
 
 
 class UserService:
@@ -46,12 +36,7 @@ class UserService:
             user.cv_specializations = Specializations.from_strs(
                 [item.value for item in dto.specializations]
             )
-            user.cv_primary_languages = PrimaryLanguages.from_strs(
-                [item.value for item in dto.primary_languages]
-            )
-
-            tech_stack = TechStack.create(dto.tech_stack)
-            user.cv_tech_stack = tech_stack if tech_stack.items else None
+            user.cv_skills = Skills.from_strs([item.value for item in dto.skills])
 
             user.cv_salary = dto.salary
             if dto.salary is not None and dto.salary.amount is not None:
@@ -70,11 +55,11 @@ class UserService:
             await self._uow.users.update(user)
         return True
 
-    async def update_specialty_and_languages_from_miniapp(
+    async def update_specialty_and_skills_from_miniapp(
         self,
         tg_id: int,
         specializations: list[str],
-        primary_languages: list[str],
+        skills: list[str],
     ) -> bool:
         async with self._uow:
             user = await self._uow.users.get_by_tg_id(UserId(tg_id))
@@ -82,7 +67,7 @@ class UserService:
                 return False
 
             user.cv_specializations = Specializations.from_strs(specializations)
-            user.cv_primary_languages = PrimaryLanguages.from_strs(primary_languages)
+            user.cv_skills = Skills.from_strs(skills)
             await self._uow.users.update(user)
         return True
 

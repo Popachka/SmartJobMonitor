@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 
 from app.domain.shared.value_objects import (
     CurrencyType,
-    LanguageType,
     Salary,
+    SkillType,
     SpecializationType,
     WorkFormat,
 )
@@ -12,38 +12,30 @@ from app.domain.shared.value_objects import (
 class OutResumeParse(BaseModel):
     is_resume: bool = Field(
         ...,
-        description=(
-            "Признак того, является ли предоставленный документ резюме или профилем кандидата."
-        ),
+        description="Признак того, является ли документ резюме или профилем кандидата.",
     )
     full_relevant_text_from_resume: str | None = Field(
         default=None,
-        description="Полный текст резюме. Если это не резюме, верни None.",
+        description="Полный релевантный текст резюме. Если это не резюме, верни None.",
     )
     specializations: list[SpecializationType] = Field(
         default_factory=list,
-        description="Список специализаций. Если Fullstack, можно указать [Backend, Frontend].",
+        description="Список специализаций. Если кандидат fullstack, можно указать Backend и Frontend.",
     )
-    primary_languages: list[LanguageType] = Field(
+    skills: list[SkillType] = Field(
         default_factory=list,
-        description="Основные языки программирования.",
-    )
-    tech_stack: list[str] = Field(
-        default_factory=list,
-        description=(
-            "Список технологий: фреймворки, БД, инструменты (FastAPI, Docker, PostgreSQL)."
-        ),
+        description="Список ключевых скиллов из фиксированного перечня SkillType.",
     )
     salary: Salary | None = Field(
         default=None,
         description=(
-            "Желаемая зарплата. Если указан диапазон — бери минимум. "
-            "Если нету информации о зарплате — null. Валюта может быть null."
+            "Желаемая зарплата. Если указан диапазон, бери минимальное значение. "
+            "Если зарплата не указана, верни null. Валюта может быть null."
         ),
     )
     work_format: WorkFormat = Field(
         default=WorkFormat.UNDEFINED,
-        description="Формат работы (REMOTE, HYBRID, ONSITE, UNDEFINED).",
+        description="Формат работы: REMOTE, HYBRID, ONSITE или UNDEFINED.",
     )
 
 
@@ -51,15 +43,15 @@ class OutResumeSalaryParse(BaseModel):
     amount: int | None = Field(
         default=None,
         description=(
-            "Числовая сумма желаемой зарплаты. Если указан диапазон, возвращай минимум. "
-            "Если суммы нет, верни null."
+            "Желаемая сумма зарплаты. Если указан диапазон, бери минимальное значение. "
+            "Если зарплата не указана, верни null."
         ),
     )
     currency: CurrencyType | None = Field(
         default=None,
-        description="Валюта зарплаты (RUB, USD, EUR) или null.",
+        description="Валюта зарплаты: RUB, USD, EUR или null.",
     )
     evidence: str | None = Field(
         default=None,
-        description="Короткий фрагмент текста, на основании которого извлечена зарплата.",
+        description="Короткий фрагмент текста, подтверждающий найденную зарплату.",
     )

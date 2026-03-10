@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.types import Message
 
-from app.domain.shared import LanguageType
+from app.domain.shared import SkillType
 from app.telegram.bot.keyboards import HELP_BUTTON_TEXT
 from app.telegram.bot.states import BotStates
 
@@ -20,16 +20,14 @@ router = Router()
     Command("help"),
 )
 async def cmd_help(message: Message) -> None:
-    available_professions = "\n".join(
-        f"<b>{escape(language.value)}</b>" for language in LanguageType
-    )
+    available_skills = "\n".join(f"<b>{escape(skill.value)}</b>" for skill in SkillType)
     help_text = (
-        "❓ Как это работает?\n\n"
-        "1. Откройте профиль через /profile или кнопку «Мой профиль».\n"
-        "2. Выберите «Заполнить форму (mini-app)», чтобы вручную настроить поиск.\n"
-        "3. Или нажмите «Загрузить резюме», чтобы бот сам разобрал профиль из PDF.\n\n"
+        "Как это работает\n\n"
+        "1. Откройте профиль через /profile или кнопку профиля.\n"
+        "2. Выберите mini-app форму, чтобы настроить поиск вручную.\n"
+        "3. Или загрузите PDF-резюме, чтобы бот сам разобрал профиль.\n\n"
         "Команда /settings открывает меню ручной настройки.\n\n"
-        "Сейчас доступны вакансии для профессий:\n"
-        f"{available_professions}\n\n"
+        "Сейчас поддерживаются скиллы:\n"
+        f"{available_skills}\n"
     )
     await message.answer(help_text, parse_mode="HTML")

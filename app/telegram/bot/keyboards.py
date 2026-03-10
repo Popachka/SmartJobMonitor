@@ -50,7 +50,7 @@ def get_profile_actions_kb() -> InlineKeyboardMarkup:
 
 
 def get_settings_menu_kb(
-    specialty_and_language_label: str,
+    specialty_and_skills_label: str,
     format_label: str,
     salary_label: str,
     specialty_url: str,
@@ -59,7 +59,7 @@ def get_settings_menu_kb(
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=f"1. {specialty_and_language_label}",
+        text=f"1. {specialty_and_skills_label}",
         web_app=WebAppInfo(url=specialty_url),
     )
     builder.button(

@@ -1,10 +1,4 @@
-from app.domain.shared.value_objects import (
-    PrimaryLanguages,
-    Salary,
-    Specializations,
-    TechStack,
-    WorkFormat,
-)
+from app.domain.shared.value_objects import Salary, Skills, Specializations, WorkFormat
 from app.domain.vacancy.entities import Vacancy
 from app.domain.vacancy.value_objects import ContentHash, VacancyId
 from app.infrastructure.db.models import Vacancy as VacancyModel
@@ -15,8 +9,7 @@ def vacancy_to_model(vacancy: Vacancy) -> VacancyModel:
         id=vacancy.id.value,
         text=vacancy.text,
         specializations=[s.value for s in vacancy.specializations.items],
-        primary_languages=[lang.value for lang in vacancy.primary_languages.items],
-        tech_stack=list(vacancy.tech_stack.items),
+        skills=[skill.value for skill in vacancy.skills.items],
         mirror_chat_id=vacancy.mirror_chat_id,
         mirror_message_id=vacancy.mirror_message_id,
         content_hash=vacancy.content_hash.value,
@@ -31,8 +24,7 @@ def vacancy_to_model(vacancy: Vacancy) -> VacancyModel:
 def apply_vacancy(model: VacancyModel, vacancy: Vacancy) -> None:
     model.text = vacancy.text
     model.specializations = [s.value for s in vacancy.specializations.items]
-    model.primary_languages = [lang.value for lang in vacancy.primary_languages.items]
-    model.tech_stack = list(vacancy.tech_stack.items)
+    model.skills = [skill.value for skill in vacancy.skills.items]
     model.mirror_chat_id = vacancy.mirror_chat_id
     model.mirror_message_id = vacancy.mirror_message_id
     model.content_hash = vacancy.content_hash.value
@@ -47,8 +39,7 @@ def vacancy_from_model(model: VacancyModel) -> Vacancy:
         id=VacancyId(model.id),
         text=model.text,
         specializations=Specializations.from_strs(model.specializations or []),
-        primary_languages=PrimaryLanguages.from_strs(model.primary_languages or []),
-        tech_stack=TechStack.create(model.tech_stack or []),
+        skills=Skills.from_strs(model.skills or []),
         mirror_chat_id=model.mirror_chat_id,
         mirror_message_id=model.mirror_message_id,
         salary=Salary.create(model.salary_amount, model.salary_currency),

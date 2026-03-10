@@ -39,8 +39,7 @@ class VacancyService:
 
         logger.info(
             f"LLM parsed vacancy (specializations={[s.value for s in result.specializations]}, "
-            f"languages={[language.value for language in result.primary_languages]}, "
-            f"tech_stack={result.tech_stack})"
+            f"skills={[skill.value for skill in result.skills]})"
         )
         return result
 
@@ -59,8 +58,7 @@ class VacancyService:
             vacancy_id=uuid4(),
             text=text,
             specializations_raw=[s.value for s in parse_result.specializations],
-            languages_raw=[language.value for language in parse_result.primary_languages],
-            tech_stack_raw=parse_result.tech_stack,
+            skills_raw=[skill.value for skill in parse_result.skills],
             mirror_chat_id=raw_vacancy_info.mirror_chat_id,
             mirror_message_id=raw_vacancy_info.mirror_message_id,
             work_format=parse_result.work_format,

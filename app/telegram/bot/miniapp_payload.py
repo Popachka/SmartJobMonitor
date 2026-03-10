@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from enum import StrEnum
 
-from app.domain.shared.value_objects import LanguageType, SpecializationType
+from app.domain.shared.value_objects import SkillType, SpecializationType
 
 
 class WorkFormatChoice(StrEnum):
@@ -20,7 +20,7 @@ class SalaryModeChoice(StrEnum):
 @dataclass(frozen=True, slots=True)
 class MiniAppPayload:
     specializations: frozenset[SpecializationType]
-    primary_languages: frozenset[LanguageType]
+    skills: frozenset[SkillType]
     work_format_choice: WorkFormatChoice
     salary_mode: SalaryModeChoice
     salary_amount_rub: int | None
@@ -37,7 +37,7 @@ def parse_miniapp_payload(raw_payload: str) -> MiniAppPayload:
 
     return MiniAppPayload(
         specializations=_parse_specializations(payload.get("specializations")),
-        primary_languages=_parse_languages(payload.get("primary_languages")),
+        skills=_parse_skills(payload.get("skills")),
         work_format_choice=_parse_work_format_choice(payload.get("work_format_choice")),
         salary_mode=_parse_salary_mode(payload.get("salary_mode")),
         salary_amount_rub=_parse_salary_amount(payload.get("salary_amount_rub")),
@@ -48,8 +48,8 @@ def _parse_specializations(raw_value: object) -> frozenset[SpecializationType]:
     return frozenset(_parse_enum_list(raw_value, SpecializationType))
 
 
-def _parse_languages(raw_value: object) -> frozenset[LanguageType]:
-    return frozenset(_parse_enum_list(raw_value, LanguageType))
+def _parse_skills(raw_value: object) -> frozenset[SkillType]:
+    return frozenset(_parse_enum_list(raw_value, SkillType))
 
 
 def _parse_enum_list[EnumChoice: StrEnum](

@@ -104,7 +104,7 @@ Useful PromQL checks:
 - `max(up{job="job_monitor"})`
 - `sum(job_monitor_vacancies_collected_total)`
 - `sum(job_monitor_messages_not_vacancy_total)`
-- `sum by (language) (job_monitor_language_matches_total)`
+- `sum by (skill) (job_monitor_skill_matches_total)`
 
 ## CI/CD deploy
 

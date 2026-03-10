@@ -203,8 +203,8 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum by (language) (job_monitor_language_matches_total)",
-          "legendFormat": "{{language}}",
+          "expr": "sum by (skill) (job_monitor_skill_matches_total)",
+          "legendFormat": "{{skill}}",
           "range": true,
           "refId": "A"
         }

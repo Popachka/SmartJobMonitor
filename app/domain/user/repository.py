@@ -17,6 +17,6 @@ class IUserRepository(Protocol):
     async def find_prefiltered_candidates(
         self,
         specializations: set[str],
-        primary_languages: set[str],
+        skills: set[str],
         is_active: bool = True,
     ) -> list[User]: ...

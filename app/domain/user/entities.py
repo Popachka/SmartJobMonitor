@@ -1,12 +1,6 @@
 from dataclasses import dataclass
 
-from app.domain.shared.value_objects import (
-    PrimaryLanguages,
-    Salary,
-    Specializations,
-    TechStack,
-    WorkFormat,
-)
+from app.domain.shared.value_objects import Salary, Skills, Specializations, WorkFormat
 from app.domain.user.value_objects import FilterMode, UserId
 
 
@@ -17,8 +11,7 @@ class User:
     cv_text: str | None
 
     cv_specializations: Specializations
-    cv_primary_languages: PrimaryLanguages
-    cv_tech_stack: TechStack | None
+    cv_skills: Skills
 
     cv_salary: Salary | None
     filter_salary_mode: FilterMode
@@ -35,8 +28,7 @@ class User:
         username: str | None = None,
         cv_text: str | None = None,
         cv_specializations_raw: list[str] | None = None,
-        cv_primary_languages_raw: list[str] | None = None,
-        cv_tech_stack_raw: list[str] | None = None,
+        cv_skills_raw: list[str] | None = None,
         cv_salary_amount: int | None = None,
         cv_salary_currency: str | None = None,
         filter_salary_mode: FilterMode | str | None = None,
@@ -45,12 +37,7 @@ class User:
         is_active: bool = True,
     ) -> "User":
         specs = Specializations.from_strs(cv_specializations_raw or [])
-        langs = PrimaryLanguages.from_strs(cv_primary_languages_raw or [])
-        stack = None
-        if cv_tech_stack_raw is not None:
-            created_stack = TechStack.create(cv_tech_stack_raw)
-            if created_stack.items:
-                stack = created_stack
+        skills = Skills.from_strs(cv_skills_raw or [])
 
         has_salary = cv_salary_amount is not None or bool(
             cv_salary_currency and cv_salary_currency.strip()
@@ -70,8 +57,7 @@ class User:
             username=username,
             cv_text=cv_text,
             cv_specializations=specs,
-            cv_primary_languages=langs,
-            cv_tech_stack=stack,
+            cv_skills=skills,
             cv_salary=salary,
             filter_salary_mode=salary_mode,
             cv_work_format=work_format,

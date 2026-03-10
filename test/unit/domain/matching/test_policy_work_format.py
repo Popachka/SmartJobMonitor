@@ -12,7 +12,7 @@ def _build_user(work_format: WorkFormat | None, mode: FilterMode) -> User:
     return User.create(
         tg_id=1,
         cv_specializations_raw=["Backend"],
-        cv_primary_languages_raw=["Python"],
+        cv_skills_raw=["Python"],
         cv_work_format=work_format,
         filter_work_format_mode=mode,
     )
@@ -23,8 +23,7 @@ def _build_vacancy(work_format: WorkFormat) -> Vacancy:
         vacancy_id=uuid4(),
         text="Senior backend engineer (Python)",
         specializations_raw=["Backend"],
-        languages_raw=["Python"],
-        tech_stack_raw=["FastAPI"],
+        skills_raw=["Python", "React"],
         mirror_chat_id=1,
         mirror_message_id=1,
         work_format=work_format,

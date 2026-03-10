@@ -49,7 +49,7 @@ class MatcherService:
                 decision = evaluate_match(vacancy=vacancy, user=candidate)
                 if decision.accepted:
                     matched_user_ids.append(candidate.tg_id)
-                    self._observe_language_matches(vacancy=vacancy, user=candidate)
+                    self._observe_skill_matches(vacancy=vacancy, user=candidate)
                     continue
 
                 rejected_count += 1
@@ -87,15 +87,15 @@ class MatcherService:
 
     async def _load_prefiltered_candidates(self, vacancy: Vacancy) -> list[User]:
         specializations = {item.value for item in vacancy.specializations.items}
-        primary_languages = {item.value for item in vacancy.primary_languages.items}
+        skills = {item.value for item in vacancy.skills.items}
         return await self._uow.users.find_prefiltered_candidates(
             specializations=specializations,
-            primary_languages=primary_languages,
+            skills=skills,
             is_active=True,
         )
 
-    def _observe_language_matches(self, vacancy: Vacancy, user: User) -> None:
-        vacancy_languages = {language.value.lower() for language in vacancy.primary_languages.items}
-        user_languages = {language.value.lower() for language in user.cv_primary_languages.items}
-        for language in sorted(vacancy_languages & user_languages):
-            self._observability.observe_language_match(language=language, count=1)
+    def _observe_skill_matches(self, vacancy: Vacancy, user: User) -> None:
+        vacancy_skills = {skill.value.lower() for skill in vacancy.skills.items}
+        user_skills = {skill.value.lower() for skill in user.cv_skills.items}
+        for skill in sorted(vacancy_skills & user_skills):
+            self._observability.observe_skill_match(skill=skill, count=1)

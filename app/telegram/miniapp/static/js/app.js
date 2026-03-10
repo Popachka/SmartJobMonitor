@@ -98,7 +98,7 @@
 
     if (pageKind === "specialty") {
       applyCheckedValues("specializations", payload.specializations);
-      applyCheckedValues("primary_languages", payload.primary_languages);
+      applyCheckedValues("skills", payload.skills);
       return;
     }
 
@@ -123,7 +123,7 @@
     if (pageKind === "specialty") {
       return {
         specializations: getCheckedValues("specializations"),
-        primary_languages: getCheckedValues("primary_languages"),
+        skills: getCheckedValues("skills"),
       };
     }
 

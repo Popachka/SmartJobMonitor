@@ -26,9 +26,13 @@ class SpecializationType(StrEnum):
     MANAGEMENT = "Management"
 
 
-class LanguageType(StrEnum):
+class SkillType(StrEnum):
     PYTHON = "Python"
     JAVASCRIPT = "JavaScript"
+    REACT = "React"
+    VUE = "Vue"
+
+
 @dataclass(frozen=True, slots=True)
 class Specializations:
     items: frozenset[SpecializationType]
@@ -46,31 +50,37 @@ class Specializations:
 
 
 @dataclass(frozen=True, slots=True)
-class PrimaryLanguages:
-    items: frozenset[LanguageType]
+class Skills:
+    items: frozenset[SkillType]
+
+    _ALIASES = {
+        "python": SkillType.PYTHON,
+        "javascript": SkillType.JAVASCRIPT,
+        "react": SkillType.REACT,
+        "vue": SkillType.VUE,
+    }
 
     @classmethod
-    def from_strs(cls, names: list[str]) -> "PrimaryLanguages":
-        valid_items = []
+    def from_strs(cls, names: list[str]) -> "Skills":
+        valid_items: list[SkillType] = []
         for name in names:
-            try:
-                valid_items.append(LanguageType(name.strip()))
-            except ValueError:
+            normalized = cls._normalize_name(name)
+            if normalized is None:
                 continue
+            valid_items.append(normalized)
 
         return cls(items=frozenset(valid_items))
 
-
-@dataclass(frozen=True, slots=True)
-class TechStack:
-    items: frozenset[str]
-
     @classmethod
-    def create(cls, raw_items: list[str] | frozenset[str] | None) -> "TechStack":
-        normalized = frozenset(
-            item.strip().capitalize() for item in (raw_items or []) if item and item.strip()
-        )
-        return cls(items=normalized)
+    def _normalize_name(cls, raw_name: str) -> SkillType | None:
+        cleaned = raw_name.strip()
+        if not cleaned:
+            return None
+
+        try:
+            return SkillType(cleaned)
+        except ValueError:
+            return cls._ALIASES.get(cleaned.lower())
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,9 +106,8 @@ __all__ = [
     "WorkFormat",
     "CurrencyType",
     "SpecializationType",
-    "LanguageType",
+    "SkillType",
     "Specializations",
-    "PrimaryLanguages",
-    "TechStack",
+    "Skills",
     "Salary",
 ]

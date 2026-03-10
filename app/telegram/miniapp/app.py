@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.application.services.user_service import UserService
 from app.core.config import config
-from app.domain.shared.value_objects import LanguageType, SpecializationType, WorkFormat
+from app.domain.shared.value_objects import SkillType, SpecializationType, WorkFormat
 from app.domain.user.entities import User
 from app.domain.user.value_objects import FilterMode
 from app.infrastructure.db import UserUnitOfWork, async_session_factory
@@ -28,7 +28,7 @@ app.mount("/miniapp/static", StaticFiles(directory=str(STATIC_DIR)), name="minia
 class SpecialtySaveRequest(BaseModel):
     init_data: str
     specializations: list[SpecializationType]
-    primary_languages: list[LanguageType]
+    skills: list[SkillType]
 
 
 class FormatSaveRequest(BaseModel):
@@ -50,16 +50,16 @@ async def miniapp_index(request: Request) -> RedirectResponse:
 @app.get("/miniapp/specialty", response_class=HTMLResponse, name="miniapp-specialty")
 async def specialty_page(request: Request) -> HTMLResponse:
     context = {
-        "page_title": "Настройка специальностей",
-        "page_description": "Добавьте или удалите нужные:",
+        "page_title": "Настройка скиллов",
+        "page_description": "Добавьте или уберите нужные специализации и скиллы.",
         "active_page": "specialty",
         "selected_specializations": [],
-        "selected_languages": [],
+        "selected_skills": [],
         "specialization_options": ["Backend", "Frontend", "Fullstack", "DevOps"],
-        "language_options": ["Python", "JavaScript"],
+        "skill_options": ["Python", "JavaScript", "React", "Vue"],
         "action_label": "Сохранить",
         "save_url": str(request.url_for("miniapp-save-specialty")),
-        "success_text": "Специальности сохранены.",
+        "success_text": "Специализации и скиллы сохранены.",
     }
     return templates.TemplateResponse(
         "pages/specialty.html",
@@ -74,7 +74,7 @@ async def specialty_page(request: Request) -> HTMLResponse:
 async def format_page(request: Request) -> HTMLResponse:
     context = {
         "page_title": "Настройка формата",
-        "page_description": "Выберите подходящий формат работы:",
+        "page_description": "Выберите подходящий формат работы.",
         "active_page": "format",
         "current_value": "",
         "options": [
@@ -100,7 +100,7 @@ async def format_page(request: Request) -> HTMLResponse:
 async def salary_page(request: Request) -> HTMLResponse:
     context = {
         "page_title": "Настройка зарплаты",
-        "page_description": "Выберите режим зарплаты и укажите сумму при необходимости:",
+        "page_description": "Выберите режим зарплаты и укажите сумму при необходимости.",
         "active_page": "salary",
         "salary_mode": "",
         "salary_amount": "",
@@ -122,7 +122,7 @@ async def read_specialty(request: Request) -> dict[str, list[str]]:
     user = await _get_user_from_request(request)
     return {
         "specializations": sorted(item.value for item in user.cv_specializations.items),
-        "primary_languages": sorted(item.value for item in user.cv_primary_languages.items),
+        "skills": sorted(item.value for item in user.cv_skills.items),
     }
 
 
@@ -131,19 +131,19 @@ async def save_specialty(payload: SpecialtySaveRequest) -> dict[str, str]:
     user_context = _parse_user_context(payload.init_data)
     if not payload.specializations:
         raise HTTPException(status_code=400, detail="Выберите минимум одну специализацию.")
-    if not payload.primary_languages:
-        raise HTTPException(status_code=400, detail="Выберите минимум один основной язык.")
+    if not payload.skills:
+        raise HTTPException(status_code=400, detail="Выберите минимум один скилл.")
 
     service = UserService(UserUnitOfWork(async_session_factory))
-    updated = await service.update_specialty_and_languages_from_miniapp(
+    updated = await service.update_specialty_and_skills_from_miniapp(
         tg_id=user_context.tg_id,
         specializations=[item.value for item in payload.specializations],
-        primary_languages=[item.value for item in payload.primary_languages],
+        skills=[item.value for item in payload.skills],
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Пользователь не найден.")
 
-    return {"status": "ok", "message": "Специальности сохранены."}
+    return {"status": "ok", "message": "Специализации и скиллы сохранены."}
 
 
 @app.get("/miniapp/api/format", name="miniapp-read-format")

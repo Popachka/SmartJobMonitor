@@ -33,7 +33,7 @@ async def send_settings_menu(bot: Bot, chat_id: int, tg_id: int) -> None:
         chat_id=chat_id,
         text=build_settings_menu_text(),
         reply_markup=get_settings_menu_kb(
-            specialty_and_language_label=view.specialty_label,
+            specialty_and_skills_label=view.specialty_label,
             format_label=view.format_label,
             salary_label=view.salary_label,
             specialty_url=view.specialty_url,

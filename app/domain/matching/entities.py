@@ -5,7 +5,6 @@ from enum import StrEnum
 class MatchRejectionReason(StrEnum):
     SALARY = "salary"
     FORMAT = "format"
-    STACK = "stack"
 
 
 @dataclass(frozen=True, slots=True)

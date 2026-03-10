@@ -30,9 +30,9 @@ class SettingsMenuView:
 
 def build_settings_menu_view(user: User) -> SettingsMenuView:
     specs_count = len(user.cv_specializations.items)
-    langs_count = len(user.cv_primary_languages.items)
+    skills_count = len(user.cv_skills.items)
 
-    specialty_label = f"Специальность и язык [{specs_count} / {langs_count}]"
+    specialty_label = f"Специальность и скиллы [{specs_count} / {skills_count}]"
     format_label = f"Формат работы [{_format_label(user)}]"
     salary_label = f"Зарплата [{_salary_label(user)}]"
 
@@ -52,7 +52,7 @@ def build_settings_menu_view(user: User) -> SettingsMenuView:
 
 def build_settings_menu_text() -> str:
     return (
-        "⚙️ Настройки ленты вакансий\n\n"
+        "Настройки\n\n"
         "Каждая inline-кнопка открывает отдельную mini-app страницу.\n"
         "Изменения сохраняются только для выбранного раздела."
     )
@@ -73,7 +73,9 @@ def _salary_label(user: User) -> str:
         return "Любая"
 
     amount = f"{user.cv_salary.amount:,}".replace(",", " ")
-    return f"от {amount} ₽/мес"
+    return f"от {amount} RUB/мес"
+
+
 def _build_entry_url(entry: str) -> str:
     raw_base = config.MINI_APP_BASE_URL.strip()
     if not raw_base:
