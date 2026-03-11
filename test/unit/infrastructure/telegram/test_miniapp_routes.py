@@ -85,9 +85,31 @@ def test_specialty_page_renders_domain_options() -> None:
         response = client.get("/miniapp/specialty")
 
     assert response.status_code == 200
-    assert "Management" in response.text
-    assert "Data Science" in response.text
+    assert "Настройка специальностей" in response.text
+    assert "Добавьте или удалите нужные:" in response.text
+    assert "Backend" in response.text
+    assert "Frontend" in response.text
+    assert "Python" in response.text
+    assert "React" in response.text
     assert "Vue" in response.text
+
+
+def test_specialty_page_uses_relative_asset_and_api_urls_under_proxy_headers() -> None:
+    with TestClient(build_miniapp_app(), base_url="http://internal:8080") as client:
+        response = client.get(
+            "/miniapp/specialty",
+            headers={
+                "host": "example.ngrok-free.dev",
+                "x-forwarded-proto": "https",
+            },
+        )
+
+    assert response.status_code == 200
+    assert 'href="/miniapp/static/css/app.css"' in response.text
+    assert 'src="/miniapp/static/js/app.js"' in response.text
+    assert 'data-save-url="/miniapp/api/specialty"' in response.text
+    assert "http://example.ngrok-free.dev/miniapp/static" not in response.text
+    assert "http://example.ngrok-free.dev/miniapp/api/" not in response.text
 
 
 def test_format_page_renders_domain_work_format_options() -> None:
@@ -100,6 +122,21 @@ def test_format_page_renders_domain_work_format_options() -> None:
     assert "HYBRID" in response.text
     assert "ONSITE" in response.text
     assert "UNDEFINED" not in response.text
+
+
+def test_miniapp_index_redirects_to_relative_specialty_path() -> None:
+    with TestClient(build_miniapp_app(), base_url="http://internal:8080") as client:
+        response = client.get(
+            "/miniapp",
+            headers={
+                "host": "example.ngrok-free.dev",
+                "x-forwarded-proto": "https",
+            },
+            follow_redirects=False,
+        )
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/miniapp/specialty"
 
 
 def test_read_specialty_returns_current_profile() -> None:

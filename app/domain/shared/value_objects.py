@@ -18,17 +18,10 @@ class CurrencyType(StrEnum):
 class SpecializationType(StrEnum):
     BACKEND = "Backend"
     FRONTEND = "Frontend"
-    FULLSTACK = "Fullstack"
-    MOBILE = "Mobile"
-    DEVOPS = "DevOps"
-    DATA_SCIENCE = "Data Science"
-    QA = "QA"
-    MANAGEMENT = "Management"
 
 
 class SkillType(StrEnum):
     PYTHON = "Python"
-    JAVASCRIPT = "JavaScript"
     REACT = "React"
     VUE = "Vue"
 
@@ -53,34 +46,19 @@ class Specializations:
 class Skills:
     items: frozenset[SkillType]
 
-    _ALIASES = {
-        "python": SkillType.PYTHON,
-        "javascript": SkillType.JAVASCRIPT,
-        "react": SkillType.REACT,
-        "vue": SkillType.VUE,
-    }
-
     @classmethod
     def from_strs(cls, names: list[str]) -> "Skills":
         valid_items: list[SkillType] = []
         for name in names:
-            normalized = cls._normalize_name(name)
-            if normalized is None:
+            cleaned = name.strip()
+            if not cleaned:
                 continue
-            valid_items.append(normalized)
+            try:
+                valid_items.append(SkillType(cleaned))
+            except ValueError:
+                continue
 
         return cls(items=frozenset(valid_items))
-
-    @classmethod
-    def _normalize_name(cls, raw_name: str) -> SkillType | None:
-        cleaned = raw_name.strip()
-        if not cleaned:
-            return None
-
-        try:
-            return SkillType(cleaned)
-        except ValueError:
-            return cls._ALIASES.get(cleaned.lower())
 
 
 @dataclass(frozen=True, slots=True)

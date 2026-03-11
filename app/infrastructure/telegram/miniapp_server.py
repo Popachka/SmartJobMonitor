@@ -17,6 +17,8 @@ def build_miniapp_server(*, host: str | None = None, port: int | None = None) ->
         app="app.telegram.miniapp.app:app",
         host=config.MINI_APP_SERVER_HOST if host is None else host,
         port=config.MINI_APP_SERVER_PORT if port is None else port,
+        proxy_headers=True,
+        forwarded_allow_ips="*",
     )
     return MiniAppServer(server_config)
 

@@ -14,15 +14,13 @@ def test_specializations_from_strs_valid() -> None:
     assert len(result.items) == 2
 
 
-def test_skills_from_strs_valid_and_deduplicated() -> None:
-    input_strings = ["Python", " python ", "React", "invalid", "", "VUE"]
+def test_skills_from_strs_accepts_only_exact_enum_values() -> None:
+    input_strings = ["Python", " Python ", "React", "invalid", "", "VUE"]
     result = Skills.from_strs(input_strings)
 
     assert isinstance(result, Skills)
     assert isinstance(result.items, frozenset)
-    assert result.items == frozenset(
-        {SkillType.PYTHON, SkillType.REACT, SkillType.VUE}
-    )
+    assert result.items == frozenset({SkillType.PYTHON, SkillType.REACT})
 
 
 @pytest.mark.parametrize(

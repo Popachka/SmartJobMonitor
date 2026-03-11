@@ -28,18 +28,25 @@
 
   <section class="form-section">
     <h2 class="section-title">Скиллы</h2>
-    <div class="choice-grid">
-      {% for item in skill_options %}
-      <label class="choice-chip">
-        <input
-          class="choice-chip__input"
-          type="checkbox"
-          name="skills"
-          value="{{ item }}"
-          {% if item in selected_skills %}checked{% endif %}
-        />
-        <span class="choice-chip__label">{{ item }}</span>
-      </label>
+    <div class="choice-sections">
+      {% for section in skill_sections %}
+      <section class="choice-section" aria-label="{{ section.title }}">
+        <h3 class="choice-section__title">{{ section.title }}</h3>
+        <div class="choice-grid">
+          {% for item in section.options %}
+          <label class="choice-chip">
+            <input
+              class="choice-chip__input"
+              type="checkbox"
+              name="skills"
+              value="{{ item.value }}"
+              {% if item.value in selected_skills %}checked{% endif %}
+            />
+            <span class="choice-chip__label">{{ item.label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </section>
       {% endfor %}
     </div>
   </section>

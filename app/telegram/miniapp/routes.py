@@ -34,8 +34,8 @@ router = APIRouter()
 
 
 @router.get("/miniapp", include_in_schema=False)
-async def miniapp_index(request: Request) -> RedirectResponse:
-    return RedirectResponse(url=str(request.url_for("miniapp-specialty")), status_code=307)
+async def miniapp_index() -> RedirectResponse:
+    return RedirectResponse(url="/miniapp/specialty", status_code=307)
 
 
 @router.get("/miniapp/specialty", response_class=HTMLResponse, name="miniapp-specialty")
