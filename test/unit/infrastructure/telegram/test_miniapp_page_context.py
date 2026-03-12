@@ -24,16 +24,62 @@ def test_build_skill_options_follows_domain_order() -> None:
 def test_build_skill_sections_groups_current_skills_in_ui_order() -> None:
     sections = build_skill_sections()
 
-    assert [section.title for section in sections] == ["Backend", "Frontend"]
-    assert [item.value for item in sections[0].options] == ["Python"]
-    assert [item.value for item in sections[1].options] == ["React", "Vue"]
+    assert [section.title for section in sections] == [
+        "Backend",
+        "Frontend",
+        "Data Science / ML",
+        "Mobile",
+        "GameDev",
+        "QA",
+        "Infrastructure & DevOps",
+        "Analytics",
+    ]
+    assert [item.value for item in sections[0].options] == [
+        "Python",
+        "Java/Scala",
+        "C#",
+        "C++",
+        "Go",
+        "C",
+        "Ruby",
+        "PHP",
+        "Node.js",
+        "TypeScript",
+        "Kotlin",
+    ]
+    assert [item.value for item in sections[1].options] == ["React", "Vue", "Angular"]
+    assert [item.value for item in sections[2].options] == [
+        "Machine Learning",
+        "NLP",
+        "Computer Vision",
+        "Recommender Systems",
+    ]
+    assert [item.value for item in sections[3].options] == ["iOS", "Android", "Flutter", "React Native"]
+    assert [item.value for item in sections[4].options] == [
+        "Unity",
+        "Unreal Engine",
+        "Gameplay Programming",
+        "Graphics",
+    ]
+    assert [item.value for item in sections[5].options] == [
+        "Manual QA",
+        "QA Automation",
+        "Performance Testing",
+    ]
+    assert [item.value for item in sections[6].options] == [
+        "DevOps",
+        "SRE",
+        "DBA",
+        "System Administration",
+    ]
+    assert [item.value for item in sections[7].options] == ["SQL", "Data Analysis"]
 
 
 def test_build_skill_sections_cover_every_skill_type_once() -> None:
     sections = build_skill_sections()
 
     actual_values = [item.value for section in sections for item in section.options]
-    assert actual_values == ["Python", "React", "Vue"]
+    assert actual_values == [item.value for item in SkillType]
     assert set(actual_values) == {item.value for item in SkillType}
 
 

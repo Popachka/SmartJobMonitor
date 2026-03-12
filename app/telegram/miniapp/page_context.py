@@ -19,11 +19,70 @@ class SkillSectionView:
     options: tuple[SkillOptionView, ...]
 
 
-_SKILL_SECTION_ORDER = (SpecializationType.BACKEND, SpecializationType.FRONTEND)
+_SKILL_SECTION_ORDER = (
+    SpecializationType.BACKEND,
+    SpecializationType.FRONTEND,
+    SpecializationType.DATA_SCIENCE_ML,
+    SpecializationType.MOBILE,
+    SpecializationType.GAMEDEV,
+    SpecializationType.QA,
+    SpecializationType.INFRASTRUCTURE_DEVOPS,
+    SpecializationType.ANALYTICS,
+)
 _SKILL_OPTION_VIEWS: tuple[SkillOptionView, ...] = (
     SkillOptionView(
         value=SkillType.PYTHON.value,
         label=SkillType.PYTHON.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.JAVA_SCALA.value,
+        label=SkillType.JAVA_SCALA.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.C_SHARP.value,
+        label=SkillType.C_SHARP.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.C_PLUSPLUS.value,
+        label=SkillType.C_PLUSPLUS.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.GO.value,
+        label=SkillType.GO.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.C.value,
+        label=SkillType.C.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.RUBY.value,
+        label=SkillType.RUBY.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.PHP.value,
+        label=SkillType.PHP.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.NODE_JS.value,
+        label=SkillType.NODE_JS.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.TYPESCRIPT.value,
+        label=SkillType.TYPESCRIPT.value,
+        section=SpecializationType.BACKEND,
+    ),
+    SkillOptionView(
+        value=SkillType.KOTLIN.value,
+        label=SkillType.KOTLIN.value,
         section=SpecializationType.BACKEND,
     ),
     SkillOptionView(
@@ -35,6 +94,116 @@ _SKILL_OPTION_VIEWS: tuple[SkillOptionView, ...] = (
         value=SkillType.VUE.value,
         label=SkillType.VUE.value,
         section=SpecializationType.FRONTEND,
+    ),
+    SkillOptionView(
+        value=SkillType.ANGULAR.value,
+        label=SkillType.ANGULAR.value,
+        section=SpecializationType.FRONTEND,
+    ),
+    SkillOptionView(
+        value=SkillType.MACHINE_LEARNING.value,
+        label=SkillType.MACHINE_LEARNING.value,
+        section=SpecializationType.DATA_SCIENCE_ML,
+    ),
+    SkillOptionView(
+        value=SkillType.NLP.value,
+        label=SkillType.NLP.value,
+        section=SpecializationType.DATA_SCIENCE_ML,
+    ),
+    SkillOptionView(
+        value=SkillType.COMPUTER_VISION.value,
+        label=SkillType.COMPUTER_VISION.value,
+        section=SpecializationType.DATA_SCIENCE_ML,
+    ),
+    SkillOptionView(
+        value=SkillType.RECOMMENDER_SYSTEMS.value,
+        label=SkillType.RECOMMENDER_SYSTEMS.value,
+        section=SpecializationType.DATA_SCIENCE_ML,
+    ),
+    SkillOptionView(
+        value=SkillType.IOS.value,
+        label=SkillType.IOS.value,
+        section=SpecializationType.MOBILE,
+    ),
+    SkillOptionView(
+        value=SkillType.ANDROID.value,
+        label=SkillType.ANDROID.value,
+        section=SpecializationType.MOBILE,
+    ),
+    SkillOptionView(
+        value=SkillType.FLUTTER.value,
+        label=SkillType.FLUTTER.value,
+        section=SpecializationType.MOBILE,
+    ),
+    SkillOptionView(
+        value=SkillType.REACT_NATIVE.value,
+        label=SkillType.REACT_NATIVE.value,
+        section=SpecializationType.MOBILE,
+    ),
+    SkillOptionView(
+        value=SkillType.UNITY.value,
+        label=SkillType.UNITY.value,
+        section=SpecializationType.GAMEDEV,
+    ),
+    SkillOptionView(
+        value=SkillType.UNREAL_ENGINE.value,
+        label=SkillType.UNREAL_ENGINE.value,
+        section=SpecializationType.GAMEDEV,
+    ),
+    SkillOptionView(
+        value=SkillType.GAMEPLAY_PROGRAMMING.value,
+        label=SkillType.GAMEPLAY_PROGRAMMING.value,
+        section=SpecializationType.GAMEDEV,
+    ),
+    SkillOptionView(
+        value=SkillType.GRAPHICS.value,
+        label=SkillType.GRAPHICS.value,
+        section=SpecializationType.GAMEDEV,
+    ),
+    SkillOptionView(
+        value=SkillType.MANUAL_QA.value,
+        label=SkillType.MANUAL_QA.value,
+        section=SpecializationType.QA,
+    ),
+    SkillOptionView(
+        value=SkillType.QA_AUTOMATION.value,
+        label=SkillType.QA_AUTOMATION.value,
+        section=SpecializationType.QA,
+    ),
+    SkillOptionView(
+        value=SkillType.PERFORMANCE_TESTING.value,
+        label=SkillType.PERFORMANCE_TESTING.value,
+        section=SpecializationType.QA,
+    ),
+    SkillOptionView(
+        value=SkillType.DEVOPS.value,
+        label=SkillType.DEVOPS.value,
+        section=SpecializationType.INFRASTRUCTURE_DEVOPS,
+    ),
+    SkillOptionView(
+        value=SkillType.SRE.value,
+        label=SkillType.SRE.value,
+        section=SpecializationType.INFRASTRUCTURE_DEVOPS,
+    ),
+    SkillOptionView(
+        value=SkillType.DBA.value,
+        label=SkillType.DBA.value,
+        section=SpecializationType.INFRASTRUCTURE_DEVOPS,
+    ),
+    SkillOptionView(
+        value=SkillType.SYSTEM_ADMINISTRATION.value,
+        label=SkillType.SYSTEM_ADMINISTRATION.value,
+        section=SpecializationType.INFRASTRUCTURE_DEVOPS,
+    ),
+    SkillOptionView(
+        value=SkillType.SQL.value,
+        label=SkillType.SQL.value,
+        section=SpecializationType.ANALYTICS,
+    ),
+    SkillOptionView(
+        value=SkillType.DATA_ANALYSIS.value,
+        label=SkillType.DATA_ANALYSIS.value,
+        section=SpecializationType.ANALYTICS,
     ),
 )
 

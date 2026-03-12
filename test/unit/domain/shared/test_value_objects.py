@@ -4,23 +4,24 @@ from app.domain.shared import CurrencyType, Salary, Skills, SkillType, Specializ
 
 
 def test_specializations_from_strs_valid() -> None:
-    input_strings = ["Backend", "Backend", "  Frontend  ", "", "InvalidName"]
+    input_strings = ["Backend", "Backend", "  Frontend  ", "Analytics", "", "InvalidName"]
     result = Specializations.from_strs(input_strings)
 
     assert isinstance(result, Specializations)
     assert isinstance(result.items, frozenset)
     assert SpecializationType.BACKEND in result.items
     assert SpecializationType.FRONTEND in result.items
-    assert len(result.items) == 2
+    assert SpecializationType.ANALYTICS in result.items
+    assert len(result.items) == 3
 
 
 def test_skills_from_strs_accepts_only_exact_enum_values() -> None:
-    input_strings = ["Python", " Python ", "React", "invalid", "", "VUE"]
+    input_strings = ["Python", " Python ", "React", "SQL", "invalid", "", "VUE"]
     result = Skills.from_strs(input_strings)
 
     assert isinstance(result, Skills)
     assert isinstance(result.items, frozenset)
-    assert result.items == frozenset({SkillType.PYTHON, SkillType.REACT})
+    assert result.items == frozenset({SkillType.PYTHON, SkillType.REACT, SkillType.SQL})
 
 
 @pytest.mark.parametrize(

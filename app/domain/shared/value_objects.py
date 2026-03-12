@@ -18,12 +18,65 @@ class CurrencyType(StrEnum):
 class SpecializationType(StrEnum):
     BACKEND = "Backend"
     FRONTEND = "Frontend"
+    DATA_SCIENCE_ML = "Data Science / ML"
+    MOBILE = "Mobile"
+    GAMEDEV = "GameDev"
+    QA = "QA"
+    INFRASTRUCTURE_DEVOPS = "Infrastructure & DevOps"
+    ANALYTICS = "Analytics"
 
 
 class SkillType(StrEnum):
+    # Backend
     PYTHON = "Python"
+    JAVA_SCALA = "Java/Scala"
+    C_SHARP = "C#"
+    C_PLUSPLUS = "C++"
+    GO = "Go"
+    C = "C"
+    RUBY = "Ruby"
+    PHP = "PHP"
+    NODE_JS = "Node.js"
+    TYPESCRIPT = "TypeScript"
+    KOTLIN = "Kotlin"
+
+    # Frontend
     REACT = "React"
     VUE = "Vue"
+    ANGULAR = "Angular"
+
+    # Data Science / ML
+    MACHINE_LEARNING = "Machine Learning"
+    NLP = "NLP"
+    COMPUTER_VISION = "Computer Vision"
+    RECOMMENDER_SYSTEMS = "Recommender Systems"
+
+    # Mobile
+    IOS = "iOS"
+    ANDROID = "Android"
+    FLUTTER = "Flutter"
+    REACT_NATIVE = "React Native"
+
+    # GameDev
+    UNITY = "Unity"
+    UNREAL_ENGINE = "Unreal Engine"
+    GAMEPLAY_PROGRAMMING = "Gameplay Programming"
+    GRAPHICS = "Graphics"
+
+    # QA
+    MANUAL_QA = "Manual QA"
+    QA_AUTOMATION = "QA Automation"
+    PERFORMANCE_TESTING = "Performance Testing"
+
+    # Infrastructure & DevOps
+    DEVOPS = "DevOps"
+    SRE = "SRE"
+    DBA = "DBA"
+    SYSTEM_ADMINISTRATION = "System Administration"
+
+    # Analytics
+    SQL = "SQL"
+    DATA_ANALYSIS = "Data Analysis"
 
 
 @dataclass(frozen=True, slots=True)

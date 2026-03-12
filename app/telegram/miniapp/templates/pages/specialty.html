@@ -10,7 +10,7 @@
 >
   <section class="form-section">
     <h2 class="section-title">Специализации</h2>
-    <div class="choice-grid">
+    <div class="choice-grid choice-grid--crumbs">
       {% for item in specialization_options %}
       <label class="choice-chip">
         <input
@@ -32,7 +32,7 @@
       {% for section in skill_sections %}
       <section class="choice-section" aria-label="{{ section.title }}">
         <h3 class="choice-section__title">{{ section.title }}</h3>
-        <div class="choice-grid">
+        <div class="choice-grid choice-grid--crumbs">
           {% for item in section.options %}
           <label class="choice-chip">
             <input

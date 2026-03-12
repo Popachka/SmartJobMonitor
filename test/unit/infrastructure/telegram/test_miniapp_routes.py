@@ -105,8 +105,8 @@ def test_specialty_page_uses_relative_asset_and_api_urls_under_proxy_headers() -
         )
 
     assert response.status_code == 200
-    assert 'href="/miniapp/static/css/app.css"' in response.text
-    assert 'src="/miniapp/static/js/app.js"' in response.text
+    assert 'href="/miniapp/static/css/app.css?v=' in response.text
+    assert 'src="/miniapp/static/js/app.js?v=' in response.text
     assert 'data-save-url="/miniapp/api/specialty"' in response.text
     assert "http://example.ngrok-free.dev/miniapp/static" not in response.text
     assert "http://example.ngrok-free.dev/miniapp/api/" not in response.text
